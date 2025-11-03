@@ -1,0 +1,160 @@
+@page "/admin/categories"
+@attribute [Authorize(Policy = "RequireAdmin")]
+@using GamePortal.Core.Entities
+@using GamePortal.Core.Interfaces
+@inject ICategoryRepository CategoryRepository
+
+<div class="container py-4">
+	<h2>Categories</h2>
+
+	<div class="card mb-4">
+		<div class="card-body">
+			<h5 class="card-title">Create Category</h5>
+			<EditForm Model="newCategory" OnValidSubmit="CreateCategoryAsync">
+				<DataAnnotationsValidator />
+				<div class="row g-2">
+					<div class="col-md-4">
+						<InputText @bind-Value="newCategory.Name" class="form-control" placeholder="Name" />
+					</div>
+					<div class="col-md-4">
+						<InputText @bind-Value="newCategory.Slug" class="form-control" placeholder="Slug" />
+					</div>
+					<div class="col-md-2">
+						<InputNumber @bind-Value="newCategory.DisplayOrder" class="form-control" />
+					</div>
+					<div class="col-md-2 d-grid">
+						<button class="btn btn-primary" type="submit">Add</button>
+					</div>
+				</div>
+			</EditForm>
+		</div>
+	</div>
+
+	@if (categories == null)
+	{
+		<p>Loading...</p>
+	}
+	else if (!categories.Any())
+	{
+		<div class="alert alert-info">No categories found.</div>
+	}
+	else
+	{
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Slug</th>
+					<th>Order</th>
+					<th>Status</th>
+					<th style="width:160px"></th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var c in categories)
+				{
+					<tr>
+						<td>
+							@if (editCategory?.Id == c.Id)
+							{
+								<InputText @bind-Value="editCategory.Name" class="form-control" />
+							}
+							else { <span>@c.Name</span> }
+						</td>
+						<td>
+							@if (editCategory?.Id == c.Id)
+							{
+								<InputText @bind-Value="editCategory.Slug" class="form-control" />
+							}
+							else { <span>@c.Slug</span> }
+						</td>
+						<td>
+							@if (editCategory?.Id == c.Id)
+							{
+								<InputNumber @bind-Value="editCategory.DisplayOrder" class="form-control" />
+							}
+							else { <span>@c.DisplayOrder</span> }
+						</td>
+						<td>
+							@if (editCategory?.Id == c.Id)
+							{
+								<input type="checkbox" class="form-check-input" @bind="editCategory.IsActive" /> <span>Active</span>
+							}
+							else { <span>@(c.IsActive ? "Active" : "Inactive")</span> }
+						</td>
+						<td>
+							@if (editCategory?.Id == c.Id)
+							{
+								<button class="btn btn-sm btn-success me-2" @onclick="SaveEditAsync">Save</button>
+								<button class="btn btn-sm btn-secondary" @onclick="CancelEdit">Cancel</button>
+							}
+							else
+							{
+								<button class="btn btn-sm btn-outline-primary me-2" @onclick="() => BeginEdit(c)">Edit</button>
+								<button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteAsync(c.Id)">Delete</button>
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+</div>
+
+@code {
+	private List<Category>? categories;
+	private Category newCategory = new() { IsActive = true, DisplayOrder = 1 };
+	private Category? editCategory;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await ReloadAsync();
+	}
+
+	private async Task ReloadAsync()
+	{
+		var list = await CategoryRepository.GetAllAsync();
+		categories = list.OrderBy(c => c.DisplayOrder).ToList();
+		StateHasChanged();
+	}
+
+	private void BeginEdit(Category c)
+	{
+		editCategory = new Category
+		{
+			Id = c.Id,
+			Name = c.Name,
+			Slug = c.Slug,
+			DisplayOrder = c.DisplayOrder,
+			IsActive = c.IsActive
+		};
+	}
+
+	private void CancelEdit()
+	{
+		editCategory = null;
+	}
+
+	private async Task CreateCategoryAsync()
+	{
+		newCategory.CreatedAt = DateTime.UtcNow;
+		await CategoryRepository.AddAsync(newCategory);
+		newCategory = new Category { IsActive = true, DisplayOrder = 1 };
+		await ReloadAsync();
+	}
+
+	private async Task SaveEditAsync()
+	{
+		if (editCategory == null) return;
+		editCategory.UpdatedAt = DateTime.UtcNow;
+		CategoryRepository.Update(editCategory);
+		editCategory = null;
+		await ReloadAsync();
+	}
+
+	private async Task DeleteAsync(int id)
+	{
+		await CategoryRepository.DeleteAsync(id);
+		await ReloadAsync();
+	}
+}

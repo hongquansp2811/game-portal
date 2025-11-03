@@ -1,0 +1,41 @@
+﻿# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.userprefs
+
+# Build
+[Bb]uild/
+[Bb]in/
+[Dd]ebug/
+[Rr]elease/
+[xX]64/
+[xX]86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Logs
+*.log
+logs/
+
+# Tools
+.toolstarget
+*.ide/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.swp
+.env
+
+# Rider
+.idea/
+*.sln.iml

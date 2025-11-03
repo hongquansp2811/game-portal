@@ -1,0 +1,11 @@
+@page "/admin"
+@attribute [Authorize(Policy = "RequireAdmin")]
+
+<div class="container py-4">
+	<h1>Admin Dashboard</h1>
+	<p class="text-muted">Manage games, categories, and site content.</p>
+	<div class="list-group">
+		<a class="list-group-item list-group-item-action" href="/admin/categories">Manage Categories</a>
+		<a class="list-group-item list-group-item-action" href="/admin/games">Manage Games</a>
+	</div>
+</div>

@@ -1,0 +1,44 @@
+@page "/games"
+@using GamePortal.Core.DTOs
+@using GamePortal.Core.Services
+@inject IGameService GameService
+
+<div class="container py-4">
+	<h1>All Games</h1>
+	<p class="text-muted">Browse all available games.</p>
+
+	@if (games == null)
+	{
+		<p>Loading...</p>
+	}
+	else if (!games.Any())
+	{
+		<div class="alert alert-info">No games found. Please add seed data.</div>
+	}
+	else
+	{
+		<div class="row">
+			@foreach (var game in games)
+			{
+				<div class="col-md-3 mb-4">
+					<div class="card h-100 shadow-sm">
+						<img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title">@game.Title</h5>
+							<p class="text-muted"><small>@game.CategoryName</small></p>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	}
+</div>
+
+@code {
+	private IEnumerable<GameDTO>? games;
+
+	protected override async Task OnInitializedAsync()
+	{
+		games = await GameService.GetLatestGamesAsync(50);
+	}
+}
