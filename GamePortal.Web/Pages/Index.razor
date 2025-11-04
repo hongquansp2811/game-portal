@@ -4,114 +4,122 @@
 @inject IGameService GameService
 
 <div class="container-fluid">
-    <div class="jumbotron bg-primary text-white py-5 mb-4">
-        <div class="container">
-            <h1 class="display-4">🎮 Welcome to GamePortal!</h1>
-            <p class="lead">Your webgame management system - Discover and play the best games online</p>
-        </div>
-    </div>
+	<div class="jumbotron bg-primary text-white py-5 mb-4">
+		<div class="container">
+			<h1 class="display-4">🎮 Welcome to GamePortal!</h1>
+			<p class="lead">Your webgame management system - Discover and play the best games online</p>
+		</div>
+	</div>
 
-    <div class="container">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="border-bottom pb-2">🔥 Hot Games</h2>
-                <p class="text-muted">Most played games right now</p>
-            </div>
-        </div>
+	<div class="container">
+		<div class="row mb-4">
+			<div class="col-12">
+				<h2 class="border-bottom pb-2">🔥 Hot Games</h2>
+				<p class="text-muted">Most played games right now</p>
+			</div>
+		</div>
 
-        @if (hotGames != null && hotGames.Any())
-        {
-            <div class="row">
-                @foreach (var game in hotGames)
-                {
-                    <div class="col-md-3 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
-                            <div class="card-body">
-                                <h5 class="card-title">@game.Title</h5>
-                                <p class="card-text">
-                                    @for (int i = 0; i < game.Rating; i++)
-                                    {
-                                        <span class="text-warning">★</span>
-                                    }
-                                </p>
-                                <p class="text-muted">
-                                    <small>@game.PlayCount playing</small>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info">
-                <h4>No games yet!</h4>
-                <p>Database is ready. You need to add seed data to see games here.</p>
-                <hr>
-                <p class="mb-0">Next step: Create seed data for categories and games.</p>
-            </div>
-        }
+		@if (hotGames != null && hotGames.Any())
+		{
+			<div class="row">
+				@foreach (var game in hotGames)
+				{
+					<div class="col-md-3 mb-4">
+						<div class="card h-100 shadow-sm" style="cursor: pointer;" @onclick="() => NavigateToGame(game.Slug)">
+							<img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
+							<div class="card-body">
+								<h5 class="card-title">@game.Title</h5>
+								<p class="card-text">
+									@for (int i = 0; i < game.Rating; i++)
+									{
+										<span class="text-warning">★</span>
+									}
+								</p>
+								<p class="text-muted">
+									<small>@game.PlayCount playing</small>
+								</p>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		}
+		else
+		{
+			<div class="alert alert-info">
+				<h4>No games yet!</h4>
+				<p>Database is ready. You need to add seed data to see games here.</p>
+				<hr>
+				<p class="mb-0">Next step: Create seed data for categories and games.</p>
+			</div>
+		}
 
-        <div class="row mt-5 mb-4">
-            <div class="col-12">
-                <h2 class="border-bottom pb-2">⭐ Featured Games</h2>
-                <p class="text-muted">Top rated games</p>
-            </div>
-        </div>
+		<div class="row mt-5 mb-4">
+			<div class="col-12">
+				<h2 class="border-bottom pb-2">⭐ Featured Games</h2>
+				<p class="text-muted">Top rated games</p>
+			</div>
+		</div>
 
-        @if (featuredGames != null && featuredGames.Any())
-        {
-            <div class="row">
-                @foreach (var game in featuredGames)
-                {
-                    <div class="col-md-3 mb-4">
-                        <div class="card h-100 shadow-sm border-warning">
-                            <img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
-                            <div class="card-body">
-                                <h5 class="card-title">@game.Title</h5>
-                                <p class="card-text">
-                                    @for (int i = 0; i < game.Rating; i++)
-                                    {
-                                        <span class="text-warning">★</span>
-                                    }
-                                </p>
-                                <p class="text-muted">
-                                    <small>@game.PlayCount playing</small>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-warning">
-                <h4>No featured games yet!</h4>
-                <p>Add some games and mark them as featured to see them here.</p>
-            </div>
-        }
-    </div>
+		@if (featuredGames != null && featuredGames.Any())
+		{
+			<div class="row">
+				@foreach (var game in featuredGames)
+				{
+					<div class="col-md-3 mb-4">
+						<div class="card h-100 shadow-sm border-warning" style="cursor: pointer;" @onclick="() => NavigateToGame(game.Slug)">
+							<img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
+							<div class="card-body">
+								<h5 class="card-title">@game.Title</h5>
+								<p class="card-text">
+									@for (int i = 0; i < game.Rating; i++)
+									{
+										<span class="text-warning">★</span>
+									}
+								</p>
+								<p class="text-muted">
+									<small>@game.PlayCount playing</small>
+								</p>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		}
+		else
+		{
+			<div class="alert alert-warning">
+				<h4>No featured games yet!</h4>
+				<p>Add some games and mark them as featured to see them here.</p>
+			</div>
+		}
+	</div>
 </div>
 
 @code {
-    private IEnumerable<GameDTO>? hotGames;
-    private IEnumerable<GameDTO>? featuredGames;
+	private IEnumerable<GameDTO>? hotGames;
+	private IEnumerable<GameDTO>? featuredGames;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            hotGames = await GameService.GetHotGamesAsync(4);
-            featuredGames = await GameService.GetFeaturedGamesAsync(8);
-        }
-        catch
-        {
-            // Handle error gracefully - database might be empty
-            hotGames = new List<GameDTO>();
-            featuredGames = new List<GameDTO>();
-        }
-    }
+	[Inject]
+	private NavigationManager Navigation { get; set; } = null!;
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			hotGames = await GameService.GetHotGamesAsync(4);
+			featuredGames = await GameService.GetFeaturedGamesAsync(8);
+		}
+		catch
+		{
+			// Handle error gracefully - database might be empty
+			hotGames = new List<GameDTO>();
+			featuredGames = new List<GameDTO>();
+		}
+	}
+
+	private void NavigateToGame(string slug)
+	{
+		Navigation.NavigateTo($"/games/{slug}");
+	}
 }

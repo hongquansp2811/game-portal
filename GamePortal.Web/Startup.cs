@@ -5,8 +5,10 @@ using GamePortal.Infrastructure.Data;
 using GamePortal.Infrastructure.Mappings;
 using GamePortal.Infrastructure.Repositories;
 using GamePortal.Infrastructure.Services;
+using GamePortal.Web.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +56,7 @@ namespace GamePortal.Web
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IGameRepository, GameRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IBannerRepository, BannerRepository>();
 
             // Services
             services.AddScoped<IGameService, GameService>();
@@ -61,6 +64,7 @@ namespace GamePortal.Web
             // Blazor
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
 
             // Authorization
             services.AddAuthorization(options =>

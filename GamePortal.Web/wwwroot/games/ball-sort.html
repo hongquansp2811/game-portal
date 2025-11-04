@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Sort Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .balls-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .ball {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 3px solid #333;
+        }
+        
+        .ball:hover {
+            transform: scale(1.1);
+        }
+        
+        .ball.red {
+            background: #e74c3c;
+        }
+        
+        .ball.blue {
+            background: #3498db;
+        }
+        
+        .ball.green {
+            background: #2ecc71;
+        }
+        
+        .ball.yellow {
+            background: #f39c12;
+        }
+        
+        .ball.purple {
+            background: #9b59b6;
+        }
+        
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>🎮 Ball Sort Puzzle</h1>
+        <p class="instructions">
+            Click on balls to sort them by color. Try to organize all balls of the same color together!
+        </p>
+        <div class="balls-container" id="ballsContainer"></div>
+        <div class="score">Score: <span id="score">0</span></div>
+        <button onclick="shuffleBalls()">🔄 Shuffle</button>
+    </div>
+
+    <script>
+        const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
+        let score = 0;
+        let selectedBall = null;
+
+        function createBalls() {
+            const container = document.getElementById('ballsContainer');
+            container.innerHTML = '';
+            const balls = [];
+
+            // Create 2 balls of each color
+            colors.forEach(color => {
+                for (let i = 0; i < 2; i++) {
+                    balls.push(color);
+                }
+            });
+
+            // Shuffle
+            balls.sort(() => Math.random() - 0.5);
+
+            // Create ball elements
+            balls.forEach((color, index) => {
+                const ball = document.createElement('div');
+                ball.className = `ball ${color}`;
+                ball.dataset.color = color;
+                ball.dataset.index = index;
+                ball.onclick = () => handleBallClick(ball);
+                container.appendChild(ball);
+            });
+        }
+
+        function handleBallClick(ball) {
+            if (!selectedBall) {
+                selectedBall = ball;
+                ball.style.transform = 'scale(1.2)';
+                ball.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.8)';
+            } else {
+                if (selectedBall === ball) {
+                    // Deselect
+                    selectedBall.style.transform = 'scale(1)';
+                    selectedBall.style.boxShadow = 'none';
+                    selectedBall = null;
+                } else {
+                    // Swap colors
+                    const tempColor = selectedBall.dataset.color;
+                    selectedBall.dataset.color = ball.dataset.color;
+                    ball.dataset.color = tempColor;
+
+                    selectedBall.className = `ball ${ball.dataset.color}`;
+                    ball.className = `ball ${selectedBall.dataset.color}`;
+
+                    selectedBall.style.transform = 'scale(1)';
+                    selectedBall.style.boxShadow = 'none';
+                    selectedBall = null;
+
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+
+                    checkWin();
+                }
+            }
+        }
+
+        function checkWin() {
+            const balls = Array.from(document.querySelectorAll('.ball'));
+            const groups = {};
+            let allSorted = true;
+
+            balls.forEach((ball, index) => {
+                const color = ball.dataset.color;
+                if (!groups[color]) groups[color] = [];
+                groups[color].push(index);
+            });
+
+            // Check if same colors are adjacent
+            Object.keys(groups).forEach(color => {
+                const indices = groups[color];
+                for (let i = 1; i < indices.length; i++) {
+                    if (indices[i] !== indices[i - 1] + 1) {
+                        allSorted = false;
+                    }
+                }
+            });
+
+            if (allSorted) {
+                setTimeout(() => {
+                    alert('🎉 Congratulations! You sorted all balls!');
+                    shuffleBalls();
+                }, 100);
+            }
+        }
+
+        function shuffleBalls() {
+            score = 0;
+            document.getElementById('score').textContent = 0;
+            selectedBall = null;
+            createBalls();
+        }
+
+        // Initialize game
+        createBalls();
+    </script>
+</body>
+
+</html>

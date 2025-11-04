@@ -61,5 +61,16 @@ public class GameRepository : Repository<Game>, IGameRepository
             .Include(g => g.Category)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Game>> GetAllGamesAsync(int skip = 0, int take = 50)
+    {
+        return await _dbSet
+            .Where(g => !g.IsDeleted)
+            .OrderByDescending(g => g.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .Include(g => g.Category)
+            .ToListAsync();
+    }
 }
 

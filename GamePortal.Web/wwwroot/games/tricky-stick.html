@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tricky Stick Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #4facfe;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .stick-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            margin: 20px auto;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .stick {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+            border-radius: 10px;
+            transition: height 0.1s;
+            cursor: pointer;
+        }
+        
+        .ball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #ff6b6b, #ee5a6f);
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: top 0.1s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .target {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background: #2ecc71;
+            border-radius: 10px;
+        }
+        
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4facfe;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background: #3d8bfe;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>🎯 Tricky Stick</h1>
+        <p class="instructions">Click to extend the stick. Release to drop the ball on target!</p>
+        <div class="stick-container" id="stickContainer">
+            <div class="target"></div>
+            <div class="stick" id="stick" style="bottom: 20px; height: 0px;"></div>
+            <div class="ball" id="ball" style="top: 50px;"></div>
+        </div>
+        <div class="score">Score: <span id="score">0</span></div>
+        <button id="playBtn" onclick="startGame()">▶️ Play</button>
+    </div>
+
+    <script>
+        let stickHeight = 0;
+        let ballPosition = 50;
+        let isPlaying = false;
+        let isExtending = false;
+        let score = 0;
+        let animationId = null;
+
+        const stick = document.getElementById('stick');
+        const ball = document.getElementById('ball');
+        const playBtn = document.getElementById('playBtn');
+
+        function startGame() {
+            isPlaying = true;
+            stickHeight = 0;
+            ballPosition = 50;
+            stick.style.height = '0px';
+            ball.style.top = '50px';
+            playBtn.disabled = true;
+            playBtn.textContent = '⏸️ Playing...';
+
+            document.addEventListener('mousedown', extendStick);
+            document.addEventListener('mouseup', releaseBall);
+            document.addEventListener('touchstart', extendStick);
+            document.addEventListener('touchend', releaseBall);
+        }
+
+        function extendStick(e) {
+            if (!isPlaying) return;
+            e.preventDefault();
+            isExtending = true;
+
+            function grow() {
+                if (isExtending && stickHeight < 300) {
+                    stickHeight += 2;
+                    stick.style.height = stickHeight + 'px';
+                    animationId = requestAnimationFrame(grow);
+                }
+            }
+            grow();
+        }
+
+        function releaseBall(e) {
+            if (!isPlaying || !isExtending) return;
+            e.preventDefault();
+            isExtending = false;
+            if (animationId) cancelAnimationFrame(animationId);
+
+            // Drop ball
+            let dropPosition = 50;
+            const dropInterval = setInterval(() => {
+                dropPosition += 5;
+                ball.style.top = dropPosition + 'px';
+
+                if (dropPosition >= 370 - stickHeight) {
+                    clearInterval(dropInterval);
+                    checkTarget();
+                }
+            }, 20);
+        }
+
+        function checkTarget() {
+            const targetBottom = 380;
+            const ballBottom = 370 - stickHeight + 30;
+            const targetCenter = 150;
+            const ballCenter = 150;
+
+            if (Math.abs(ballBottom - targetBottom) < 30 && Math.abs(ballCenter - targetCenter) < 40) {
+                score += 10;
+                document.getElementById('score').textContent = score;
+                alert('🎉 Great shot! +10 points');
+            } else {
+                alert('❌ Missed! Try again.');
+            }
+
+            resetRound();
+        }
+
+        function resetRound() {
+            isPlaying = false;
+            stickHeight = 0;
+            ballPosition = 50;
+            stick.style.height = '0px';
+            ball.style.top = '50px';
+            playBtn.disabled = false;
+            playBtn.textContent = '▶️ Play Again';
+
+            document.removeEventListener('mousedown', extendStick);
+            document.removeEventListener('mouseup', releaseBall);
+            document.removeEventListener('touchstart', extendStick);
+            document.removeEventListener('touchend', releaseBall);
+        }
+    </script>
+</body>
+
+</html>

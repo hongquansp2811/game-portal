@@ -4,8 +4,46 @@
 <div class="container py-4">
 	<h1>Admin Dashboard</h1>
 	<p class="text-muted">Manage games, categories, and site content.</p>
-	<div class="list-group">
-		<a class="list-group-item list-group-item-action" href="/admin/categories">Manage Categories</a>
-		<a class="list-group-item list-group-item-action" href="/admin/games">Manage Games</a>
+	
+	<div class="row g-3">
+		<div class="col-md-4">
+			<div class="card h-100">
+				<div class="card-body">
+					<h5 class="card-title">🎮 Games</h5>
+					<p class="card-text">Manage all games - Create, Edit, Delete games.</p>
+					<a href="/admin/games" class="btn btn-primary">Manage Games</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="card h-100">
+				<div class="card-body">
+					<h5 class="card-title">📁 Categories</h5>
+					<p class="card-text">Manage game categories and organize your content.</p>
+					<a href="/admin/categories" class="btn btn-primary">Manage Categories</a>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="card h-100">
+				<div class="card-body">
+					<h5 class="card-title">📢 Banners</h5>
+					<p class="card-text">Manage site banners and advertisements.</p>
+					<a href="/admin/banners" class="btn btn-primary">Manage Banners</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row g-3 mt-2">
+		<div class="col-md-4">
+			<div class="card h-100">
+				<div class="card-body">
+					<h5 class="card-title">📊 Statistics</h5>
+					<p class="card-text">View analytics and statistics of your games and categories.</p>
+					<a href="/admin/statistics" class="btn btn-primary">View Statistics</a>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>

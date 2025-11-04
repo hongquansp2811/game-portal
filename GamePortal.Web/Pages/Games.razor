@@ -1,32 +1,99 @@
 @page "/games"
 @using GamePortal.Core.DTOs
+@using GamePortal.Core.Entities
+@using GamePortal.Core.Interfaces
 @using GamePortal.Core.Services
 @inject IGameService GameService
+@inject ICategoryRepository CategoryRepository
+@inject NavigationManager Navigation
 
 <div class="container py-4">
 	<h1>All Games</h1>
-	<p class="text-muted">Browse all available games.</p>
+	<p class="text-muted">Browse all available games. Click on a game to play!</p>
 
+	<!-- Search and Filter -->
+	<div class="card mb-4">
+		<div class="card-body">
+			<div class="row g-3">
+				<div class="col-md-6">
+					<label class="form-label">Search Games</label>
+					<div class="input-group">
+						<input type="text" class="form-control" placeholder="Search by name..." 
+							   value="@searchTerm" @oninput="OnSearchInput" />
+						<button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">
+							Clear
+						</button>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<label class="form-label">Filter by Category</label>
+					<select class="form-select" @onchange="OnCategoryFilterChanged">
+						<option value="0">All Categories</option>
+						@foreach (var cat in categories ?? new List<GamePortal.Core.Entities.Category>())
+						{
+							<option value="@cat.Id" selected="@(selectedCategoryId == cat.Id)">@cat.Name</option>
+						}
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Games Grid -->
 	@if (games == null)
 	{
-		<p>Loading...</p>
+		<div class="text-center py-5">
+			<div class="spinner-border" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
 	}
 	else if (!games.Any())
 	{
-		<div class="alert alert-info">No games found. Please add seed data.</div>
+		<div class="alert alert-info">
+			<h4>No games found</h4>
+			<p>@(string.IsNullOrEmpty(searchTerm) && selectedCategoryId == 0 
+				? "Please add seed data." 
+				: "Try adjusting your search or filter.")</p>
+		</div>
 	}
 	else
 	{
+		<div class="mb-3">
+			<strong>Found @games.Count() game(s)</strong>
+		</div>
 		<div class="row">
 			@foreach (var game in games)
 			{
 				<div class="col-md-3 mb-4">
-					<div class="card h-100 shadow-sm">
+					<div class="card h-100 shadow-sm" style="cursor: pointer;" @onclick="() => NavigateToGame(game.Slug)">
 						<img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
 						<div class="card-body">
 							<h5 class="card-title">@game.Title</h5>
 							<p class="text-muted"><small>@game.CategoryName</small></p>
+							<div class="d-flex justify-content-between align-items-center">
+								<div>
+									@for (int i = 0; i < game.Rating; i++)
+									{
+										<span class="text-warning">★</span>
+									}
+								</div>
+								<small class="text-muted">@game.PlayCount plays</small>
+							</div>
 						</div>
+						@if (game.IsHot || game.IsFeatured)
+						{
+							<div class="card-footer">
+								@if (game.IsHot)
+								{
+									<span class="badge bg-danger">🔥 Hot</span>
+								}
+								@if (game.IsFeatured)
+								{
+									<span class="badge bg-warning">⭐ Featured</span>
+								}
+							</div>
+						}
 					</div>
 				</div>
 			}
@@ -36,9 +103,72 @@
 
 @code {
 	private IEnumerable<GameDTO>? games;
+	private List<GamePortal.Core.Entities.Category>? categories;
+	private string searchTerm = string.Empty;
+	private int selectedCategoryId = 0;
 
 	protected override async Task OnInitializedAsync()
 	{
-		games = await GameService.GetLatestGamesAsync(50);
+		await LoadCategoriesAsync();
+		await LoadGamesAsync();
+	}
+
+	private async Task LoadCategoriesAsync()
+	{
+		var allCategories = await CategoryRepository.GetAllAsync();
+		categories = allCategories.Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToList();
+	}
+
+	private async Task LoadGamesAsync()
+	{
+		var categoryName = categories?.FirstOrDefault(c => c.Id == selectedCategoryId)?.Name;
+
+		if (!string.IsNullOrWhiteSpace(searchTerm))
+		{
+			var searchedGames = await GameService.SearchGamesAsync(searchTerm);
+			// Filter by category if selected
+			if (selectedCategoryId > 0 && !string.IsNullOrEmpty(categoryName))
+			{
+				games = searchedGames.Where(g => g.CategoryName == categoryName).ToList();
+			}
+			else
+			{
+				games = searchedGames.ToList();
+			}
+		}
+		else if (selectedCategoryId > 0)
+		{
+			games = (await GameService.GetGamesByCategoryAsync(selectedCategoryId, 0, 100)).ToList();
+		}
+		else
+		{
+			games = (await GameService.GetLatestGamesAsync(100)).ToList();
+		}
+	}
+
+	private async Task OnSearchInput(ChangeEventArgs e)
+	{
+		searchTerm = e.Value?.ToString() ?? string.Empty;
+		await LoadGamesAsync();
+	}
+
+	private async Task ClearSearch()
+	{
+		searchTerm = string.Empty;
+		await LoadGamesAsync();
+	}
+
+	private async Task OnCategoryFilterChanged(ChangeEventArgs e)
+	{
+		if (int.TryParse(e.Value?.ToString(), out int categoryId))
+		{
+			selectedCategoryId = categoryId;
+			await LoadGamesAsync();
+		}
+	}
+
+	private void NavigateToGame(string slug)
+	{
+		Navigation.NavigateTo($"/games/{slug}");
 	}
 }

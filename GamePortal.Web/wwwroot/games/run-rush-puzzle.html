@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Rush Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .game-container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #f5576c;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .puzzle-piece {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid #333;
+        }
+        
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .puzzle-piece.empty {
+            background: #ddd;
+            cursor: default;
+        }
+        
+        .puzzle-piece.empty:hover {
+            transform: scale(1);
+        }
+        
+        .score {
+            font-size: 20px;
+            font-weight: bold;
+            color: #f5576c;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #f5576c;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background: #e0465a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>🏃 Run Rush Puzzle</h1>
+        <p class="instructions">Click pieces to move them and solve the puzzle!</p>
+        <div class="puzzle-grid" id="puzzleGrid"></div>
+        <div class="score">Moves: <span id="moves">0</span></div>
+        <button onclick="resetPuzzle()">🔄 Reset</button>
+    </div>
+
+    <script>
+        let puzzle = [1, 2, 3, 4, 5, 6, 7, 8, 0]; // 0 is empty
+        let moves = 0;
+        const solvedState = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createPuzzle() {
+            const grid = document.getElementById('puzzleGrid');
+            grid.innerHTML = '';
+
+            puzzle.forEach((value, index) => {
+                const piece = document.createElement('div');
+                piece.className = value === 0 ? 'puzzle-piece empty' : 'puzzle-piece';
+                piece.textContent = value === 0 ? '' : value;
+                piece.onclick = () => movePiece(index);
+                grid.appendChild(piece);
+            });
+        }
+
+        function movePiece(index) {
+            const emptyIndex = puzzle.indexOf(0);
+            const row = Math.floor(index / 3);
+            const col = index % 3;
+            const emptyRow = Math.floor(emptyIndex / 3);
+            const emptyCol = emptyIndex % 3;
+
+            // Check if adjacent
+            const isAdjacent =
+                (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
+                (Math.abs(col - emptyCol) === 1 && row === emptyRow);
+
+            if (isAdjacent) {
+                [puzzle[index], puzzle[emptyIndex]] = [puzzle[emptyIndex], puzzle[index]];
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                createPuzzle();
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            if (JSON.stringify(puzzle) === JSON.stringify(solvedState)) {
+                setTimeout(() => {
+                    alert(`🎉 Congratulations! You solved it in ${moves} moves!`);
+                    resetPuzzle();
+                }, 100);
+            }
+        }
+
+        function resetPuzzle() {
+            puzzle = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+            shuffleArray(puzzle);
+            moves = 0;
+            document.getElementById('moves').textContent = 0;
+            createPuzzle();
+        }
+
+        // Initialize
+        resetPuzzle();
+    </script>
+</body>
+
+</html>

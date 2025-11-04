@@ -1,0 +1,202 @@
+@page "/admin/statistics"
+@attribute [Authorize(Policy = "RequireAdmin")]
+@using GamePortal.Core.Interfaces
+@using GamePortal.Core.Services
+@inject IGameService GameService
+@inject ICategoryRepository CategoryRepository
+
+<div class="container py-4">
+	<h2>📊 Statistics Dashboard</h2>
+	<p class="text-muted">Overview of your GamePortal system</p>
+
+	@if (stats == null)
+	{
+		<div class="text-center py-5">
+			<div class="spinner-border" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="row g-3 mb-4">
+			<!-- Total Games -->
+			<div class="col-md-3">
+				<div class="card text-center">
+					<div class="card-body">
+						<h5 class="card-title text-primary">🎮 Total Games</h5>
+						<h2 class="mb-0">@stats.TotalGames</h2>
+						<small class="text-muted">@stats.ActiveGames active</small>
+					</div>
+				</div>
+			</div>
+
+			<!-- Total Categories -->
+			<div class="col-md-3">
+				<div class="card text-center">
+					<div class="card-body">
+						<h5 class="card-title text-success">📁 Categories</h5>
+						<h2 class="mb-0">@stats.TotalCategories</h2>
+						<small class="text-muted">@stats.ActiveCategories active</small>
+					</div>
+				</div>
+			</div>
+
+			<!-- Total Plays -->
+			<div class="col-md-3">
+				<div class="card text-center">
+					<div class="card-body">
+						<h5 class="card-title text-warning">👆 Total Plays</h5>
+						<h2 class="mb-0">@stats.TotalPlays</h2>
+						<small class="text-muted">@stats.AveragePlaysPerGame avg/game</small>
+					</div>
+				</div>
+			</div>
+
+			<!-- Hot Games -->
+			<div class="col-md-3">
+				<div class="card text-center">
+					<div class="card-body">
+						<h5 class="card-title text-danger">🔥 Hot Games</h5>
+						<h2 class="mb-0">@stats.HotGamesCount</h2>
+						<small class="text-muted">@stats.FeaturedGamesCount featured</small>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Top Games -->
+		<div class="row">
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0">🏆 Top 5 Most Played Games</h5>
+					</div>
+					<div class="card-body">
+						@if (stats.TopGames != null && stats.TopGames.Any())
+						{
+							<div class="list-group">
+								@foreach (var game in stats.TopGames)
+								{
+									<div class="list-group-item d-flex justify-content-between align-items-center">
+										<div>
+											<strong>@game.Title</strong>
+											<br />
+											<small class="text-muted">@game.CategoryName</small>
+										</div>
+										<span class="badge bg-primary rounded-pill">@game.PlayCount plays</span>
+									</div>
+								}
+							</div>
+						}
+						else
+						{
+							<p class="text-muted">No games data available</p>
+						}
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0">📈 Games by Category</h5>
+					</div>
+					<div class="card-body">
+						@if (stats.GamesByCategory != null && stats.GamesByCategory.Any())
+						{
+							<div class="list-group">
+								@foreach (var item in stats.GamesByCategory)
+								{
+									<div class="list-group-item d-flex justify-content-between align-items-center">
+										<div>
+											<strong>@item.CategoryName</strong>
+										</div>
+										<span class="badge bg-success rounded-pill">@item.GameCount games</span>
+									</div>
+								}
+							</div>
+						}
+						else
+						{
+							<p class="text-muted">No category data available</p>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+</div>
+
+@code {
+	private StatisticsViewModel? stats;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadStatisticsAsync();
+	}
+
+	private async Task LoadStatisticsAsync()
+	{
+		var allGames = (await GameService.GetAllGamesAsync(0, 1000)).ToList();
+		var allCategories = (await CategoryRepository.GetAllAsync()).ToList();
+
+		stats = new StatisticsViewModel
+		{
+			TotalGames = allGames.Count,
+			ActiveGames = allGames.Count, // All are active (soft delete filtered)
+			TotalCategories = allCategories.Count,
+			ActiveCategories = allCategories.Count(c => c.IsActive),
+			TotalPlays = allGames.Sum(g => g.PlayCount),
+			HotGamesCount = allGames.Count(g => g.IsHot),
+			FeaturedGamesCount = allGames.Count(g => g.IsFeatured),
+			AveragePlaysPerGame = allGames.Any() ? (int)(allGames.Average(g => g.PlayCount)) : 0,
+			TopGames = allGames
+				.OrderByDescending(g => g.PlayCount)
+				.Take(5)
+				.Select(g => new TopGameViewModel
+				{
+					Title = g.Title,
+					CategoryName = g.CategoryName,
+					PlayCount = g.PlayCount
+				})
+				.ToList(),
+			GamesByCategory = allGames
+				.GroupBy(g => g.CategoryName)
+				.Select(g => new CategoryStatsViewModel
+				{
+					CategoryName = g.Key,
+					GameCount = g.Count()
+				})
+				.OrderByDescending(g => g.GameCount)
+				.ToList()
+		};
+	}
+
+	private class StatisticsViewModel
+	{
+		public int TotalGames { get; set; }
+		public int ActiveGames { get; set; }
+		public int TotalCategories { get; set; }
+		public int ActiveCategories { get; set; }
+		public int TotalPlays { get; set; }
+		public int HotGamesCount { get; set; }
+		public int FeaturedGamesCount { get; set; }
+		public int AveragePlaysPerGame { get; set; }
+		public List<TopGameViewModel>? TopGames { get; set; }
+		public List<CategoryStatsViewModel>? GamesByCategory { get; set; }
+	}
+
+	private class TopGameViewModel
+	{
+		public string Title { get; set; } = string.Empty;
+		public string CategoryName { get; set; } = string.Empty;
+		public int PlayCount { get; set; }
+	}
+
+	private class CategoryStatsViewModel
+	{
+		public string CategoryName { get; set; } = string.Empty;
+		public int GameCount { get; set; }
+	}
+}

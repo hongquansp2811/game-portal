@@ -9,5 +9,6 @@ public interface IGameRepository : IRepository<Game>
     Task<IEnumerable<Game>> GetGamesByCategoryAsync(int categoryId, int skip = 0, int take = 10);
     Task<IEnumerable<Game>> GetLatestGamesAsync(int count);
     Task<IEnumerable<Game>> SearchGamesAsync(string searchTerm);
+    Task<IEnumerable<Game>> GetAllGamesAsync(int skip = 0, int take = 50);
 }
 

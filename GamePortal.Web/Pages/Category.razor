@@ -1,0 +1,118 @@
+@page "/games/category/{CategorySlug}"
+@using GamePortal.Core.DTOs
+@using GamePortal.Core.Entities
+@using GamePortal.Core.Interfaces
+@using GamePortal.Core.Services
+@inject IGameService GameService
+@inject ICategoryRepository CategoryRepository
+@inject NavigationManager Navigation
+
+<div class="container py-4">
+	@if (gameCategory == null)
+	{
+		<div class="alert alert-warning">
+			<h4>Category not found</h4>
+			<p>The category you're looking for doesn't exist.</p>
+			<a href="/games" class="btn btn-primary">Back to Games</a>
+		</div>
+	}
+	else
+	{
+		<div class="mb-4">
+			<h1>@gameCategory.Name Games</h1>
+			<p class="text-muted">@(games?.Count() ?? 0) game(s) in this category</p>
+		</div>
+
+		@if (games == null)
+		{
+			<div class="text-center py-5">
+				<div class="spinner-border" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+		}
+		else if (!games.Any())
+		{
+			<div class="alert alert-info">
+				<h4>No games in this category</h4>
+				<p>This category doesn't have any games yet.</p>
+				<a href="/games" class="btn btn-primary">Browse All Games</a>
+			</div>
+		}
+		else
+		{
+			<div class="row">
+				@foreach (var game in games)
+				{
+					<div class="col-md-3 mb-4">
+						<div class="card h-100 shadow-sm" style="cursor: pointer;" @onclick="() => NavigateToGame(game.Slug)">
+							<img src="@game.ThumbnailUrl" class="card-img-top" alt="@game.Title" style="height: 200px; object-fit: cover;">
+							<div class="card-body">
+								<h5 class="card-title">@game.Title</h5>
+								<div class="d-flex justify-content-between align-items-center">
+									<div>
+										@for (int i = 0; i < game.Rating; i++)
+										{
+											<span class="text-warning">★</span>
+										}
+									</div>
+									<small class="text-muted">@game.PlayCount plays</small>
+								</div>
+							</div>
+							@if (game.IsHot || game.IsFeatured)
+							{
+								<div class="card-footer">
+									@if (game.IsHot)
+									{
+										<span class="badge bg-danger">🔥 Hot</span>
+									}
+									@if (game.IsFeatured)
+									{
+										<span class="badge bg-warning">⭐ Featured</span>
+									}
+								</div>
+							}
+						</div>
+					</div>
+				}
+			</div>
+		}
+	}
+</div>
+
+@code {
+	[Parameter]
+	public string CategorySlug { get; set; } = string.Empty;
+
+	private GamePortal.Core.Entities.Category? gameCategory;
+	private IEnumerable<GameDTO>? games;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadCategoryAndGamesAsync();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await LoadCategoryAndGamesAsync();
+	}
+
+	private async Task LoadCategoryAndGamesAsync()
+	{
+		if (string.IsNullOrEmpty(CategorySlug))
+			return;
+
+		var allCategories = await CategoryRepository.GetAllAsync();
+		gameCategory = allCategories.FirstOrDefault(c => c.Slug.Equals(CategorySlug, StringComparison.OrdinalIgnoreCase) && c.IsActive);
+
+		if (gameCategory != null)
+		{
+			games = await GameService.GetGamesByCategoryAsync(gameCategory.Id, 0, 100);
+		}
+	}
+
+	private void NavigateToGame(string slug)
+	{
+		Navigation.NavigateTo($"/games/{slug}");
+	}
+}

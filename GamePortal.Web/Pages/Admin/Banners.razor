@@ -1,0 +1,213 @@
+@page "/admin/banners"
+@attribute [Authorize(Policy = "RequireAdmin")]
+@using GamePortal.Core.Entities
+@using GamePortal.Core.Interfaces
+@inject IBannerRepository BannerRepository
+
+<div class="container py-4">
+	<h2>Banners Management</h2>
+
+	<!-- Create Banner Form -->
+	<div class="card mb-4">
+		<div class="card-body">
+			<h5 class="card-title">@(editBannerId.HasValue ? "Edit Banner" : "Create New Banner")</h5>
+			<EditForm Model="currentBanner" OnValidSubmit="@(editBannerId.HasValue ? SaveBannerAsync : CreateBannerAsync)">
+				<DataAnnotationsValidator />
+				<div class="row g-3">
+					<div class="col-md-6">
+						<label class="form-label">Title *</label>
+						<InputText @bind-Value="currentBanner.Title" class="form-control" placeholder="Banner Title" />
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">Position *</label>
+						<InputSelect @bind-Value="currentBanner.Position" class="form-select">
+							<option value="@BannerPosition.Top">Top</option>
+							<option value="@BannerPosition.Sidebar">Sidebar</option>
+							<option value="@BannerPosition.Bottom">Bottom</option>
+							<option value="@BannerPosition.Inline">Inline</option>
+						</InputSelect>
+					</div>
+					<div class="col-12">
+						<label class="form-label">Image URL *</label>
+						<InputText @bind-Value="currentBanner.ImageUrl" class="form-control" placeholder="https://..." />
+					</div>
+					<div class="col-12">
+						<label class="form-label">Link URL</label>
+						<InputText @bind-Value="currentBanner.LinkUrl" class="form-control" placeholder="https://..." />
+						<small class="form-text text-muted">URL để redirect khi click vào banner (optional)</small>
+					</div>
+					<div class="col-12">
+						<label class="form-label">Description</label>
+						<InputTextArea @bind-Value="currentBanner.Description" class="form-control" rows="2" />
+					</div>
+					<div class="col-md-3">
+						<label class="form-label">Display Order</label>
+						<InputNumber @bind-Value="currentBanner.DisplayOrder" class="form-control" min="0" />
+					</div>
+					<div class="col-md-3 d-flex align-items-end">
+						<div class="form-check">
+							<InputCheckbox @bind-Value="currentBanner.IsActive" class="form-check-input" />
+							<label class="form-check-label">Is Active</label>
+						</div>
+					</div>
+					<div class="col-12">
+						<button class="btn btn-primary" type="submit">@(editBannerId.HasValue ? "Update Banner" : "Create Banner")</button>
+						@if (editBannerId.HasValue)
+						{
+							<button class="btn btn-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+						}
+					</div>
+				</div>
+			</EditForm>
+		</div>
+	</div>
+
+	<!-- Banners List -->
+	@if (banners == null)
+	{
+		<div class="text-center py-5">
+			<div class="spinner-border" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
+	}
+	else if (!banners.Any())
+	{
+		<div class="alert alert-info">No banners found. Create your first banner above.</div>
+	}
+	else
+	{
+		<div class="card">
+			<div class="card-body">
+				<h5 class="card-title">All Banners</h5>
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Preview</th>
+								<th>Title</th>
+								<th>Position</th>
+								<th>Order</th>
+								<th>Status</th>
+								<th style="width:200px">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var banner in banners.OrderBy(b => b.DisplayOrder))
+							{
+								<tr>
+									<td>
+										@if (!string.IsNullOrEmpty(banner.ImageUrl))
+										{
+											<img src="@banner.ImageUrl" alt="@banner.Title" style="max-width: 100px; max-height: 50px; object-fit: cover;" class="img-thumbnail" />
+										}
+										else
+										{
+											<span class="text-muted">No image</span>
+										}
+									</td>
+									<td>
+										<strong>@banner.Title</strong>
+										@if (!string.IsNullOrEmpty(banner.Description))
+										{
+											<br />
+											<small class="text-muted">@banner.Description</small>
+										}
+									</td>
+									<td>
+										<span class="badge bg-info">@banner.Position</span>
+									</td>
+									<td>@banner.DisplayOrder</td>
+									<td>
+										@if (banner.IsActive)
+										{
+											<span class="badge bg-success">Active</span>
+										}
+										else
+										{
+											<span class="badge bg-secondary">Inactive</span>
+										}
+									</td>
+									<td>
+										<button class="btn btn-sm btn-outline-primary me-2" @onclick="() => BeginEdit(banner)">Edit</button>
+										<button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteBannerAsync(banner.Id)">Delete</button>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	}
+</div>
+
+@code {
+	private List<Banner>? banners;
+	private Banner currentBanner = new() { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
+	private int? editBannerId;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await ReloadAsync();
+	}
+
+	private async Task ReloadAsync()
+	{
+		var list = await BannerRepository.GetAllAsync();
+		banners = list.OrderBy(b => b.DisplayOrder).ToList();
+		StateHasChanged();
+	}
+
+	private void BeginEdit(Banner banner)
+	{
+		editBannerId = banner.Id;
+		currentBanner = new Banner
+		{
+			Id = banner.Id,
+			Title = banner.Title,
+			ImageUrl = banner.ImageUrl,
+			LinkUrl = banner.LinkUrl,
+			Description = banner.Description,
+			Position = banner.Position,
+			DisplayOrder = banner.DisplayOrder,
+			IsActive = banner.IsActive
+		};
+		StateHasChanged();
+	}
+
+	private void CancelEdit()
+	{
+		editBannerId = null;
+		currentBanner = new Banner { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
+		StateHasChanged();
+	}
+
+	private async Task CreateBannerAsync()
+	{
+		currentBanner.CreatedAt = DateTime.UtcNow;
+		await BannerRepository.AddAsync(currentBanner);
+		currentBanner = new Banner { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
+		await ReloadAsync();
+	}
+
+	private async Task SaveBannerAsync()
+	{
+		if (editBannerId.HasValue)
+		{
+			currentBanner.UpdatedAt = DateTime.UtcNow;
+			BannerRepository.Update(currentBanner);
+			CancelEdit();
+			await ReloadAsync();
+		}
+	}
+
+	private async Task DeleteBannerAsync(int id)
+	{
+		if (await BannerRepository.GetByIdAsync(id) != null)
+		{
+			await BannerRepository.DeleteAsync(id);
+			await ReloadAsync();
+		}
+	}
+}

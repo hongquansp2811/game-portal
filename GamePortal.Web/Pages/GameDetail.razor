@@ -1,0 +1,146 @@
+@page "/games/{Slug}"
+@using GamePortal.Core.DTOs
+@using GamePortal.Core.Services
+@inject IGameService GameService
+@inject NavigationManager Navigation
+
+<div class="container py-4">
+	@if (game == null)
+	{
+		<div class="alert alert-warning">
+			<h4>Game not found</h4>
+			<p>The game you're looking for doesn't exist.</p>
+			<a href="/games" class="btn btn-primary">Back to Games</a>
+		</div>
+	}
+	else
+	{
+		<!-- Game Header -->
+		<div class="row mb-4">
+			<div class="col-md-4">
+				<img src="@game.ThumbnailUrl" alt="@game.Title" class="img-fluid rounded shadow" />
+			</div>
+			<div class="col-md-8">
+				<h1>@game.Title</h1>
+				<p class="text-muted">
+					Category: <a href="/games/category/@game.CategorySlug">@game.CategoryName</a>
+					@if (game.IsHot)
+					{
+						<span class="badge bg-danger ms-2">🔥 Hot</span>
+					}
+					@if (game.IsFeatured)
+					{
+						<span class="badge bg-warning ms-2">⭐ Featured</span>
+					}
+				</p>
+				<div class="mb-3">
+					@for (int i = 0; i < game.Rating; i++)
+					{
+						<span class="text-warning fs-4">★</span>
+					}
+					<span class="ms-2">(@game.Rating / 5)</span>
+					<span class="ms-3">
+						<strong>@game.PlayCount</strong> plays
+					</span>
+				</div>
+				@if (!string.IsNullOrEmpty(game.Description))
+				{
+					<p class="lead">@game.Description</p>
+				}
+				@if (!string.IsNullOrEmpty(game.Platform))
+				{
+					<p><strong>Platform:</strong> @game.Platform</p>
+				}
+				<p><strong>Type:</strong> @game.GameType</p>
+			</div>
+		</div>
+
+		<!-- Full Description -->
+		@if (!string.IsNullOrEmpty(game.FullDescription))
+		{
+			<div class="card mb-4">
+				<div class="card-body">
+					<h5 class="card-title">About This Game</h5>
+					<p class="card-text">@game.FullDescription</p>
+				</div>
+			</div>
+		}
+
+		<!-- Game Gallery -->
+		@if (game.GalleryImages != null && game.GalleryImages.Any())
+		{
+			<div class="card mb-4">
+				<div class="card-body">
+					<h5 class="card-title">Screenshots</h5>
+					<div class="row g-3">
+						@foreach (var img in game.GalleryImages)
+						{
+							<div class="col-md-3">
+								<img src="@img" alt="Screenshot" class="img-fluid rounded" style="cursor: pointer;" onclick="window.open('@img', '_blank')" />
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+		}
+
+		<!-- Game Play Area -->
+		<div class="card mb-4">
+			<div class="card-header bg-primary text-white">
+				<h4 class="mb-0">🎮 Play Game</h4>
+			</div>
+			<div class="card-body p-0">
+				@if (string.IsNullOrEmpty(game.GameUrl))
+				{
+					<div class="alert alert-warning m-4">
+						<p>Game URL is not configured. Please contact administrator.</p>
+					</div>
+				}
+				else
+				{
+					<div style="position: relative; width: 100%; padding-bottom: 75%; background: #000;">
+						<iframe 
+							src="@game.GameUrl" 
+							style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+							allowfullscreen
+							title="@game.Title">
+						</iframe>
+					</div>
+				}
+			</div>
+		</div>
+
+		<!-- Related Games -->
+		<div class="card">
+			<div class="card-body">
+				<h5 class="card-title">More Games</h5>
+				<div class="row">
+					<div class="col-12 text-center">
+						<a href="/games" class="btn btn-primary">Browse All Games</a>
+						<a href="/" class="btn btn-outline-secondary ms-2">Back to Home</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+</div>
+
+@code {
+	[Parameter]
+	public string Slug { get; set; } = string.Empty;
+
+	private GameDetailDTO? game;
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (!string.IsNullOrEmpty(Slug))
+		{
+			game = await GameService.GetGameBySlugAsync(Slug);
+			if (game != null)
+			{
+				// Increment play count when user views the game
+				await GameService.IncrementPlayCountAsync(game.Id);
+			}
+		}
+	}
+}
