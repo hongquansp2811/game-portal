@@ -4,10 +4,10 @@
 @inject IGameService GameService
 @inject NavigationManager Navigation
 
-<div class="container py-4">
+<div class="container py-5">
 	@if (game == null)
 	{
-		<div class="alert alert-warning">
+		<div class="alert alert-warning" style="background: rgba(245, 158, 11, 0.15); border-left: 4px solid #f59e0b; color: #f59e0b; border-radius: var(--radius-md);">
 			<h4>Game not found</h4>
 			<p>The game you're looking for doesn't exist.</p>
 			<a href="/games" class="btn btn-primary">Back to Games</a>
@@ -16,52 +16,54 @@
 	else
 	{
 		<!-- Game Header -->
-		<div class="row mb-4">
+		<div class="row mb-5">
 			<div class="col-md-4">
-				<img src="@game.ThumbnailUrl" alt="@game.Title" class="img-fluid rounded shadow" />
+				<img src="@game.ThumbnailUrl" alt="@game.Title" class="img-fluid rounded" style="box-shadow: var(--shadow-lg); border: 2px solid var(--border-color);" />
 			</div>
 			<div class="col-md-8">
-				<h1>@game.Title</h1>
-				<p class="text-muted">
-					Category: <a href="/games/category/@game.CategorySlug">@game.CategoryName</a>
+				<h1 style="font-weight: 700; font-size: 2.5rem; color: var(--text-primary); margin-bottom: 1rem;">@game.Title</h1>
+				<p class="text-muted mb-3">
+					Category: <a href="/games/category/@game.CategorySlug" style="color: var(--accent-cyan);">@game.CategoryName</a>
 					@if (game.IsHot)
 					{
-						<span class="badge bg-danger ms-2">🔥 Hot</span>
+						<span class="badge ms-2" style="background: var(--accent-red);">🔥 Hot</span>
 					}
 					@if (game.IsFeatured)
 					{
-						<span class="badge bg-warning ms-2">⭐ Featured</span>
+						<span class="badge ms-2" style="background: #f59e0b;">⭐ Featured</span>
 					}
 				</p>
-				<div class="mb-3">
+				<div class="mb-4">
 					@for (int i = 0; i < game.Rating; i++)
 					{
-						<span class="text-warning fs-4">★</span>
+						<span class="text-warning fs-4" style="color: #fbbf24;">★</span>
 					}
-					<span class="ms-2">(@game.Rating / 5)</span>
-					<span class="ms-3">
-						<strong>@game.PlayCount</strong> plays
+					<span class="ms-2" style="color: var(--text-secondary);">(@game.Rating / 5)</span>
+					<span class="ms-3" style="color: var(--text-secondary);">
+						<strong style="color: var(--accent-purple);">@game.PlayCount</strong> plays
 					</span>
 				</div>
 				@if (!string.IsNullOrEmpty(game.Description))
 				{
-					<p class="lead">@game.Description</p>
+					<p class="lead" style="color: var(--text-secondary); font-size: 1.125rem; line-height: 1.7;">@game.Description</p>
 				}
 				@if (!string.IsNullOrEmpty(game.Platform))
 				{
-					<p><strong>Platform:</strong> @game.Platform</p>
+					<p style="color: var(--text-secondary);"><strong style="color: var(--text-primary);">Platform:</strong> @game.Platform</p>
 				}
-				<p><strong>Type:</strong> @game.GameType</p>
+				<p style="color: var(--text-secondary);"><strong style="color: var(--text-primary);">Type:</strong> @game.GameType</p>
 			</div>
 		</div>
 
 		<!-- Full Description -->
 		@if (!string.IsNullOrEmpty(game.FullDescription))
 		{
-			<div class="card mb-4">
-				<div class="card-body">
-					<h5 class="card-title">About This Game</h5>
-					<p class="card-text">@game.FullDescription</p>
+			<div class="card mb-5" style="background: var(--bg-card); border-color: var(--border-color);">
+				<div class="card-body" style="padding: 2rem;">
+					<h5 class="card-title" style="color: var(--text-primary); font-weight: 600; margin-bottom: 1rem;">
+						<i class="bi bi-info-circle"></i> About This Game
+					</h5>
+					<p class="card-text" style="color: var(--text-secondary); line-height: 1.7;">@game.FullDescription</p>
 				</div>
 			</div>
 		}
@@ -69,14 +71,19 @@
 		<!-- Game Gallery -->
 		@if (game.GalleryImages != null && game.GalleryImages.Any())
 		{
-			<div class="card mb-4">
-				<div class="card-body">
-					<h5 class="card-title">Screenshots</h5>
-					<div class="row g-3">
+			<div class="card mb-5" style="background: var(--bg-card); border-color: var(--border-color);">
+				<div class="card-body" style="padding: 2rem;">
+					<h5 class="card-title" style="color: var(--text-primary); font-weight: 600; margin-bottom: 1.5rem;">
+						<i class="bi bi-images"></i> Screenshots
+					</h5>
+					<div class="row g-4">
 						@foreach (var img in game.GalleryImages)
 						{
 							<div class="col-md-3">
-								<img src="@img" alt="Screenshot" class="img-fluid rounded" style="cursor: pointer;" onclick="window.open('@img', '_blank')" />
+								<img src="@img" alt="Screenshot" class="img-fluid rounded" style="cursor: pointer; border: 2px solid var(--border-color); transition: all 0.3s ease;" 
+									 onclick="window.open('@img', '_blank')" 
+									 onmouseover="this.style.borderColor='var(--accent-purple)'; this.style.transform='scale(1.05)';"
+									 onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='scale(1)';" />
 							</div>
 						}
 					</div>
@@ -85,14 +92,16 @@
 		}
 
 		<!-- Game Play Area -->
-		<div class="card mb-4">
-			<div class="card-header bg-primary text-white">
-				<h4 class="mb-0">🎮 Play Game</h4>
+		<div class="card mb-5" style="background: var(--bg-card); border-color: var(--border-color); overflow: hidden;">
+			<div class="card-header" style="background: var(--gradient-primary); color: white; padding: 1.5rem 2rem; border: none;">
+				<h4 class="mb-0" style="font-weight: 600;">
+					<i class="bi bi-play-circle-fill"></i> Play Game
+				</h4>
 			</div>
 			<div class="card-body p-0">
 				@if (string.IsNullOrEmpty(game.GameUrl))
 				{
-					<div class="alert alert-warning m-4">
+					<div class="alert alert-warning m-4" style="background: rgba(245, 158, 11, 0.15); border-left: 4px solid #f59e0b; color: #f59e0b;">
 						<p>Game URL is not configured. Please contact administrator.</p>
 					</div>
 				}
@@ -103,6 +112,8 @@
 							src="@game.GameUrl" 
 							style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
 							allowfullscreen
+							allow="autoplay; fullscreen; microphone; camera; gamepad; payment; geolocation"
+							sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
 							title="@game.Title">
 						</iframe>
 					</div>
@@ -111,13 +122,15 @@
 		</div>
 
 		<!-- Related Games -->
-		<div class="card">
-			<div class="card-body">
-				<h5 class="card-title">More Games</h5>
+		<div class="card" style="background: var(--bg-card); border-color: var(--border-color);">
+			<div class="card-body" style="padding: 2rem; text-align: center;">
+				<h5 class="card-title" style="color: var(--text-primary); font-weight: 600; margin-bottom: 1.5rem;">
+					<i class="bi bi-grid"></i> More Games
+				</h5>
 				<div class="row">
-					<div class="col-12 text-center">
-						<a href="/games" class="btn btn-primary">Browse All Games</a>
-						<a href="/" class="btn btn-outline-secondary ms-2">Back to Home</a>
+					<div class="col-12">
+						<a href="/games" class="btn btn-primary me-2">Browse All Games</a>
+						<a href="/" class="btn btn-secondary">Back to Home</a>
 					</div>
 				</div>
 			</div>

@@ -205,5 +205,30 @@ public static class DbInitializer
 			var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
 			await userManager.ResetPasswordAsync(adminUser, token, "Admin123!");
 		}
+
+		// Seed SiteSettings
+		if (!await context.SiteSettings.AnyAsync())
+		{
+			var settings = new SiteSettings
+			{
+				SiteName = "GamePortal",
+				SiteDescription = "Your webgame management system - Discover and play the best games online",
+				FooterDescription = "Embrace the best in gaming at GamePortal! Each day, our team reviews and selects top-notch games, providing you with unbiased insights and a premier experience for iOS and Android enthusiasts.",
+				Email = "contact@gameportal.com",
+				Phone = "+84 123 456 789",
+				Address = "123 Gaming Street, Ho Chi Minh City, Vietnam",
+				FacebookUrl = "https://facebook.com/gameportal",
+				TwitterUrl = "https://twitter.com/gameportal",
+				InstagramUrl = "https://instagram.com/gameportal",
+				YoutubeUrl = "https://youtube.com/gameportal",
+				PrivacyPolicyUrl = "/privacy-policy",
+				DisclaimerUrl = "/disclaimer",
+				TermsOfServiceUrl = "/terms-of-service",
+				CopyrightText = $"© {DateTime.Now.Year} GamePortal. All rights reserved.",
+				CreatedAt = DateTime.UtcNow
+			};
+			await context.SiteSettings.AddAsync(settings);
+			await context.SaveChangesAsync();
+		}
 	}
 }

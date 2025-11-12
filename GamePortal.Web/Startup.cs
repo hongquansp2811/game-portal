@@ -57,9 +57,12 @@ namespace GamePortal.Web
             services.AddScoped<IGameRepository, GameRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IBannerRepository, BannerRepository>();
+            services.AddScoped<ISiteSettingsRepository, SiteSettingsRepository>();
 
             // Services
             services.AddScoped<IGameService, GameService>();
+            services.AddScoped<IBannerService, BannerService>();
+            services.AddScoped<ISiteSettingsService, SiteSettingsService>();
 
             // Blazor
             services.AddRazorPages();

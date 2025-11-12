@@ -1,0 +1,178 @@
+@using GamePortal.Core.Entities
+@using GamePortal.Core.Services
+@inject IBannerService BannerService
+
+@if (bannerList != null && bannerList.Any())
+{
+	if (bannerList.Count == 1)
+	{
+		<!-- Single Banner -->
+		@RenderSingleBanner(bannerList[0])
+	}
+	else
+	{
+		<!-- Multiple Banners - Carousel -->
+		<div id="bannerCarousel-@Position" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+			<div class="carousel-indicators">
+				@for (int i = 0; i < bannerList.Count; i++)
+				{
+					<button type="button" data-bs-target="#bannerCarousel-@Position" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+				}
+			</div>
+			<div class="carousel-inner">
+				@for (int i = 0; i < bannerList.Count; i++)
+				{
+					var banner = bannerList[i];
+					<div class="carousel-item @(i == 0 ? "active" : "")">
+						@RenderSingleBanner(banner)
+					</div>
+				}
+			</div>
+			<button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel-@Position" data-bs-slide="prev">
+				<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+				<span class="visually-hidden">Previous</span>
+			</button>
+			<button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel-@Position" data-bs-slide="next">
+				<span class="carousel-control-next-icon" aria-hidden="true"></span>
+				<span class="visually-hidden">Next</span>
+			</button>
+		</div>
+	}
+}
+else if (ShowPlaceholder)
+{
+	<div class="banner-placeholder @CssClass">Banner placeholder</div>
+}
+
+@code {
+	[Parameter]
+	public BannerPosition Position { get; set; }
+
+	[Parameter]
+	public string? CssClass { get; set; }
+
+	[Parameter]
+	public bool ShowPlaceholder { get; set; }
+
+	private List<Banner>? bannerList;
+	private bool isLoading;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await LoadBannersAsync();
+	}
+
+	private async Task LoadBannersAsync()
+	{
+		if (isLoading) return;
+		try
+		{
+			isLoading = true;
+			var banners = await BannerService.GetActiveByPositionAsync(Position);
+			bannerList = banners.OrderBy(b => b.DisplayOrder).ToList();
+		}
+		finally
+		{
+			isLoading = false;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	private RenderFragment RenderSingleBanner(Banner banner)
+	{
+		return builder =>
+		{
+			builder.OpenElement(0, "div");
+			builder.AddAttribute(1, "class", $"banner-container {CssClass ?? string.Empty}");
+
+			if (!string.IsNullOrEmpty(banner.LinkUrl))
+			{
+				builder.OpenElement(2, "a");
+				builder.AddAttribute(3, "href", banner.LinkUrl);
+				builder.AddAttribute(4, "target", "_blank");
+				builder.AddAttribute(5, "rel", "noopener noreferrer");
+				builder.AddAttribute(6, "class", "banner-link");
+			}
+			else
+			{
+				builder.OpenElement(2, "div");
+				builder.AddAttribute(3, "class", "banner-link");
+			}
+
+			builder.OpenElement(7, "img");
+			builder.AddAttribute(8, "src", banner.ImageUrl);
+			builder.AddAttribute(9, "alt", banner.Title);
+			builder.AddAttribute(10, "class", "banner-image");
+			builder.CloseElement();
+
+			if (!string.IsNullOrEmpty(banner.Description))
+			{
+				builder.OpenElement(11, "div");
+				builder.AddAttribute(12, "class", "banner-caption");
+				builder.AddContent(13, banner.Description);
+				builder.CloseElement();
+			}
+
+			builder.CloseElement(); // a or div
+			builder.CloseElement(); // container
+		};
+	}
+}
+
+<style>
+	.banner-container {
+		position: relative;
+		margin-bottom: 1rem;
+	}
+
+	.banner-link {
+		display: block;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.banner-link:hover {
+		opacity: 0.9;
+		transition: opacity 0.3s ease;
+	}
+
+	.banner-image {
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		width: 100%;
+		height: auto;
+		object-fit: cover;
+	}
+
+	.banner-caption {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+		color: white;
+		padding: 1rem;
+		font-size: 0.9rem;
+		border-radius: 0 0 8px 8px;
+	}
+
+	.carousel-item {
+		max-height: 400px;
+		overflow: hidden;
+	}
+
+	.carousel-item img {
+		width: 100%;
+		height: auto;
+		object-fit: cover;
+	}
+
+	.banner-placeholder {
+		border: 1px dashed #ccc;
+		padding: 2rem;
+		text-align: center;
+		color: #888;
+		border-radius: 8px;
+	}
+</style>
+

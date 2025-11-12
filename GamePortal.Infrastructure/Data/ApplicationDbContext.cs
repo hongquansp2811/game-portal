@@ -19,6 +19,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Banner> Banners { get; set; }
     public DbSet<TipGuide> TipGuides { get; set; }
     public DbSet<TipGuideCategory> TipGuideCategories { get; set; }
+    public DbSet<SiteSettings> SiteSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -68,6 +69,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasKey(e => e.Id);
         });
 
+        builder.Entity<SiteSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SiteName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Email).HasMaxLength(200);
+            entity.Property(e => e.Phone).HasMaxLength(50);
+        });
+
         builder.Entity<TipGuide>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -101,6 +110,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Game>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Banner>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<TipGuide>().HasQueryFilter(e => !e.IsDeleted);
+        // SiteSettings không dùng soft delete vì chỉ có 1 record
     }
 }
 

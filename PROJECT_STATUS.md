@@ -1,7 +1,7 @@
 # 📊 Báo Cáo Tình Trạng Dự Án - GamePortal
 
-**Ngày cập nhật**: 2025-01-27  
-**Trạng thái tổng thể**: 🟢 Đang phát triển (75% hoàn thành)
+**Ngày cập nhật**: 2025-01-28  
+**Trạng thái tổng thể**: 🟢 Đang phát triển (80% hoàn thành)
 
 ---
 
@@ -43,6 +43,7 @@
   - GetFeaturedGamesAsync, GetHotGamesAsync, GetLatestGamesAsync
   - GetGamesByCategoryAsync, GetGameBySlugAsync, SearchGamesAsync
 - ✅ `GameService` implementation
+- ✅ `IBannerService` interface và `BannerService` implementation (sử dụng IServiceScopeFactory để tránh DbContext conflict)
 
 ### 📄 DTOs
 - ✅ `GameDTO` (cho danh sách)
@@ -55,10 +56,16 @@
 - ✅ Trang chi tiết Game (`/games/{slug}`):
   - ✅ Hiển thị FullDescription
   - ✅ Game iframe để chơi game trực tiếp trên website
+  - ✅ Iframe với đầy đủ permissions (autoplay, fullscreen, WebGL, etc.)
+  - ✅ Sandbox attributes để hỗ trợ service workers
   - ✅ Rating và PlayCount
   - ✅ Related games
 - ✅ Search functionality - Tìm kiếm games theo tên
 - ✅ Category filtering - Lọc games theo category
+- ✅ Banners Display - Hiển thị banners trên trang chủ và các trang
+  - ✅ BannerDisplay component với carousel support
+  - ✅ Top banners trên trang chủ và trang Games
+  - ✅ BannerService để load banners từ database
 - ✅ Layout responsive với Bootstrap 5
 - ✅ Navigation menu (Home, Games, Admin)
 
@@ -72,11 +79,13 @@
   - ✅ Protected bằng `[Authorize(Policy = "RequireAdmin")]`
 - ✅ Admin Games (`/admin/games`) - CRUD đầy đủ:
   - ✅ Form tạo mới game (Title, Slug, ThumbnailUrl, Description, Category, Rating, GameUrl, etc.)
+  - ✅ Data Annotations validation với error messages
   - ✅ Danh sách games với actions
   - ✅ Edit game (inline form)
   - ✅ Delete game (soft delete)
   - ✅ Quản lý GameUrl để embed iframe
   - ✅ IsHot và IsFeatured flags
+  - ✅ Error handling và success messages
 - ✅ Admin Banners (`/admin/banners`) - CRUD đầy đủ:
   - ✅ Create/Edit banner
   - ✅ Chọn Position (Top, Sidebar, Bottom, Inline)
@@ -112,13 +121,13 @@
 
 ### 🔴 ƯU TIÊN CAO
 
-#### 1. Frontend - Banners Display ⭐⭐⭐
-- ❌ Hiển thị banners ở các vị trí:
-  - ❌ Top banner (trang chủ và các trang)
-  - ❌ Sidebar banners
+#### 1. Frontend - Banners Display (Đã hoàn thành cơ bản) ⭐
+- ✅ Top banner (trang chủ và trang Games)
+- ✅ Banner rotation/carousel (nếu có nhiều banners cùng position)
+- ✅ Banner click tracking (nếu có LinkUrl)
+- ⚠️ Còn thiếu:
+  - ❌ Sidebar banners (nếu có layout sidebar)
   - ❌ Bottom banners
-- ❌ Banner rotation/carousel (nếu có nhiều banners cùng position)
-- ❌ Banner click tracking (nếu có LinkUrl)
 
 #### 2. Game Features Enhancement ⭐⭐
 - ❌ Game Reviews UI (GameReview entity đã có, chưa có UI)
@@ -190,7 +199,7 @@
 - ✅ Game detail page với iframe
 - ✅ Category filter page
 - ✅ Search functionality
-- ❌ Banners display
+- ✅ Banners display (Top banners)
 - ✅ Responsive design
 
 ### Admin Dashboard
@@ -207,7 +216,7 @@
 - ✅ GameService (read operations)
 - ✅ GameService (create/update/delete)
 - ✅ BannerRepository (CRUD)
-- ❌ BannerService (nếu cần business logic)
+- ✅ BannerService (với IServiceScopeFactory để tránh DbContext conflict)
 - ❌ UserService
 - ❌ StatisticsService (hiện tại tính trực tiếp trong Statistics.razor)
 
@@ -221,11 +230,10 @@
 
 ## 🎯 KẾ HOẠCH PHÁT TRIỂN TIẾP THEO
 
-### Phase 1: Frontend Banners Display (Ưu tiên cao nhất)
-1. **Hiển thị banners trên Frontend** - Cần để banner Happy New Year hiển thị cho users
-   - Component để load và hiển thị banners theo position
-   - Top banner trên trang chủ và các trang
-   - Sidebar banners (nếu có layout sidebar)
+### Phase 1: Game Features Enhancement (Ưu tiên cao nhất)
+1. **Game Reviews UI** - Cho users review games
+2. **Tip Guides UI** - Admin thêm guides, Frontend hiển thị
+3. **Game Gallery** - Upload và hiển thị screenshots
 
 ### Phase 2: Game Features Enhancement
 2. **Game Reviews UI** - Cho users review games
@@ -277,6 +285,13 @@
 ---
 
 ## 📅 Lịch sử cập nhật
+
+### 2025-01-28
+- ✅ Hoàn thành Frontend Banners Display (BannerDisplay component)
+- ✅ Tạo BannerService với IServiceScopeFactory (fix DbContext conflict)
+- ✅ Fix lỗi Create Game (thêm validation, error handling)
+- ✅ Cải thiện iframe permissions cho games (WebGL, service workers)
+- ✅ Tạo tài liệu hướng dẫn thêm game (FREE_GAMES_SOURCES.md, HOW_TO_ADD_GAME.md)
 
 ### 2025-01-27
 - ✅ Hoàn thành Admin Banners CRUD

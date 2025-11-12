@@ -1,0 +1,220 @@
+@page "/admin/site-settings"
+@attribute [Authorize(Policy = "RequireAdmin")]
+@using GamePortal.Core.Entities
+@using GamePortal.Core.Services
+@inject ISiteSettingsService SiteSettingsService
+
+<div class="container py-4 fade-in">
+	<div class="admin-page-header">
+		<h2><i class="bi bi-gear"></i> Site Settings</h2>
+		<div class="text-muted">Manage website information and contact details</div>
+	</div>
+
+	<div class="admin-card">
+		<div class="admin-card-header">
+			<i class="bi bi-info-circle"></i> General Information
+		</div>
+		<div class="admin-card-body">
+			@if (!string.IsNullOrEmpty(errorMessage))
+			{
+				<div class="alert alert-danger" role="alert">
+					<i class="bi bi-exclamation-triangle-fill"></i>
+					@errorMessage
+				</div>
+			}
+			
+			@if (!string.IsNullOrEmpty(successMessage))
+			{
+				<div class="alert alert-success" role="alert">
+					<i class="bi bi-check-circle-fill"></i>
+					@successMessage
+				</div>
+			}
+
+			<EditForm Model="settings" OnValidSubmit="SaveSettingsAsync">
+				<DataAnnotationsValidator />
+				<div class="row g-4">
+					<div class="col-md-6">
+						<label class="form-label required">
+							<i class="bi bi-globe"></i> Site Name
+						</label>
+						<InputText @bind-Value="settings.SiteName" class="form-control" placeholder="GamePortal" />
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-image"></i> Logo URL
+						</label>
+						<InputText @bind-Value="settings.LogoUrl" class="form-control" placeholder="https://..." />
+						@if (!string.IsNullOrEmpty(settings.LogoUrl))
+						{
+							<div class="image-preview-container has-image mt-2">
+								<img src="@settings.LogoUrl" alt="Logo preview" class="image-preview" 
+									 onerror="this.parentElement.classList.remove('has-image'); this.style.display='none';" />
+							</div>
+						}
+					</div>
+					<div class="col-12">
+						<label class="form-label">
+							<i class="bi bi-card-text"></i> Site Description
+						</label>
+						<InputTextArea @bind-Value="settings.SiteDescription" class="form-control" rows="2" placeholder="Brief description of your website..." />
+					</div>
+					<div class="col-12">
+						<label class="form-label">
+							<i class="bi bi-file-text"></i> Footer Description
+						</label>
+						<InputTextArea @bind-Value="settings.FooterDescription" class="form-control" rows="3" placeholder="Description shown in footer..." />
+					</div>
+					
+					<div class="col-12">
+						<div class="section-divider"></div>
+						<h5 class="mb-3"><i class="bi bi-telephone"></i> Contact Information</h5>
+					</div>
+					
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-envelope"></i> Email
+						</label>
+						<InputText @bind-Value="settings.Email" class="form-control" placeholder="contact@gameportal.com" type="email" />
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-telephone"></i> Phone
+						</label>
+						<InputText @bind-Value="settings.Phone" class="form-control" placeholder="+84 123 456 789" />
+					</div>
+					<div class="col-12">
+						<label class="form-label">
+							<i class="bi bi-geo-alt"></i> Address
+						</label>
+						<InputTextArea @bind-Value="settings.Address" class="form-control" rows="2" placeholder="123 Gaming Street, City, Country" />
+					</div>
+					
+					<div class="col-12">
+						<div class="section-divider"></div>
+						<h5 class="mb-3"><i class="bi bi-share"></i> Social Media Links</h5>
+					</div>
+					
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-facebook"></i> Facebook URL
+						</label>
+						<InputText @bind-Value="settings.FacebookUrl" class="form-control" placeholder="https://facebook.com/..." />
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-twitter"></i> Twitter URL
+						</label>
+						<InputText @bind-Value="settings.TwitterUrl" class="form-control" placeholder="https://twitter.com/..." />
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-instagram"></i> Instagram URL
+						</label>
+						<InputText @bind-Value="settings.InstagramUrl" class="form-control" placeholder="https://instagram.com/..." />
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">
+							<i class="bi bi-youtube"></i> YouTube URL
+						</label>
+						<InputText @bind-Value="settings.YoutubeUrl" class="form-control" placeholder="https://youtube.com/..." />
+					</div>
+					
+					<div class="col-12">
+						<div class="section-divider"></div>
+						<h5 class="mb-3"><i class="bi bi-link-45deg"></i> Legal Links</h5>
+					</div>
+					
+					<div class="col-md-4">
+						<label class="form-label">
+							<i class="bi bi-shield-check"></i> Privacy Policy URL
+						</label>
+						<InputText @bind-Value="settings.PrivacyPolicyUrl" class="form-control" placeholder="/privacy-policy" />
+					</div>
+					<div class="col-md-4">
+						<label class="form-label">
+							<i class="bi bi-file-earmark-text"></i> Disclaimer URL
+						</label>
+						<InputText @bind-Value="settings.DisclaimerUrl" class="form-control" placeholder="/disclaimer" />
+					</div>
+					<div class="col-md-4">
+						<label class="form-label">
+							<i class="bi bi-file-earmark-check"></i> Terms of Service URL
+						</label>
+						<InputText @bind-Value="settings.TermsOfServiceUrl" class="form-control" placeholder="/terms-of-service" />
+					</div>
+					<div class="col-12">
+						<label class="form-label">
+							<i class="bi bi-copyright"></i> Copyright Text
+						</label>
+						<InputText @bind-Value="settings.CopyrightText" class="form-control" placeholder="© 2025 GamePortal. All rights reserved." />
+					</div>
+					
+					<div class="col-12">
+						<div class="section-divider"></div>
+						<button class="btn btn-primary" type="submit" disabled="@isProcessing">
+							@if (isProcessing)
+							{
+								<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+							}
+							else
+							{
+								<i class="bi bi-save"></i>
+							}
+							Save Settings
+						</button>
+					</div>
+				</div>
+			</EditForm>
+		</div>
+	</div>
+</div>
+
+@code {
+	private GamePortal.Core.Entities.SiteSettings settings = new();
+	private bool isProcessing = false;
+	private string? errorMessage;
+	private string? successMessage;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadSettingsAsync();
+	}
+
+	private async Task LoadSettingsAsync()
+	{
+		try
+		{
+			settings = await SiteSettingsService.GetSettingsAsync();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error loading settings: {ex.Message}";
+		}
+	}
+
+	private async Task SaveSettingsAsync()
+	{
+		if (isProcessing) return;
+		
+		errorMessage = null;
+		successMessage = null;
+		
+		try
+		{
+			isProcessing = true;
+			settings = await SiteSettingsService.UpdateSettingsAsync(settings);
+			successMessage = "Settings saved successfully!";
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error saving settings: {ex.Message}";
+		}
+		finally
+		{
+			isProcessing = false;
+			StateHasChanged();
+		}
+	}
+}
+

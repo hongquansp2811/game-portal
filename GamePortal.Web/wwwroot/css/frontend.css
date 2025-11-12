@@ -1,0 +1,294 @@
+/* ============================================
+   GamePortal Frontend - Purple Galaxy Theme
+   ============================================ */
+
+:root {
+    /* Purple Galaxy Color Palette */
+    --bg-primary: #1A1B3A;
+    --bg-secondary: #2D2E4A;
+    --bg-card: #2D2E4A;
+    --accent-purple: #8B5CF6;
+    --accent-cyan: #06B6D4;
+    --accent-red: #EF4444;
+    /* Chỉ dùng cho Hot Games */
+    --border-color: #4C51BF;
+    --text-primary: #F9FAFB;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+    /* Gradients */
+    --gradient-primary: linear-gradient(45deg, #8B5CF6, #06B6D4);
+    --gradient-purple: linear-gradient(135deg, #8B5CF6, #7C3AED);
+    --gradient-cyan: linear-gradient(135deg, #06B6D4, #0891B2);
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(139, 92, 246, 0.3), 0 4px 6px -2px rgba(6, 182, 212, 0.2);
+    --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+
+/* Global Font */
+
+* {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+
+/* Body Background */
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+
+/* Main Content Area */
+
+.main {
+    background: var(--bg-primary);
+}
+
+.content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+
+/* Jumbotron/Welcome Banner */
+
+.jumbotron.bg-primary {
+    background: var(--gradient-primary) !important;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    padding: 3rem 2rem !important;
+    margin-bottom: 3rem;
+}
+
+.jumbotron h1 {
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    color: white;
+    font-size: 2.5rem;
+}
+
+.jumbotron .lead {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.125rem;
+}
+
+
+/* Cards */
+
+.card {
+    border: 1px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border-color: var(--accent-purple);
+}
+
+.card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+
+/* Game Cards - Special hover effect */
+
+.game-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.game-card:hover {
+    transform: scale(1.03) translateY(-5px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border-color: var(--accent-purple);
+}
+
+.card-body {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 1.5rem;
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.card-text {
+    color: var(--text-secondary);
+}
+
+
+/* Buttons */
+
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    transform: translateY(-2px);
+    color: white;
+}
+
+
+/* Section Headers */
+
+h2.border-bottom {
+    border-bottom: 3px solid var(--accent-purple) !important;
+    color: var(--text-primary);
+    padding-bottom: 0.75rem;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+
+/* Hot Games - Red Accent */
+
+.hot-games-header {
+    border-bottom: 3px solid var(--accent-red) !important;
+    color: var(--accent-red);
+    padding-bottom: 0.75rem;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+
+/* Text Colors */
+
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+
+/* Alerts */
+
+.alert-info {
+    background: rgba(6, 182, 212, 0.15);
+    border-left: 4px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    border-radius: var(--radius-md);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.15);
+    border-left: 4px solid #f59e0b;
+    color: #f59e0b;
+    border-radius: var(--radius-md);
+}
+
+
+/* Badges */
+
+.badge.bg-danger {
+    background: var(--accent-red) !important;
+}
+
+.badge.bg-warning {
+    background: #f59e0b !important;
+}
+
+.badge.bg-info {
+    background: var(--accent-cyan) !important;
+}
+
+
+/* Links */
+
+a {
+    color: var(--accent-cyan);
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--accent-purple);
+}
+
+
+/* Featured Games Border */
+
+.border-warning {
+    border-color: #f59e0b !important;
+    border-width: 2px !important;
+}
+
+
+/* Container Spacing */
+
+.container {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+
+.container-fluid {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+
+
+/* Section Spacing - Increased white space */
+
+.row.mb-4 {
+    margin-bottom: 3.5rem !important;
+}
+
+.row.mb-5 {
+    margin-bottom: 4rem !important;
+}
+
+.row.mt-5 {
+    margin-top: 4rem !important;
+}
+
+
+/* Card spacing */
+
+.card {
+    margin-bottom: 2.5rem;
+}
+
+
+/* Paragraph spacing */
+
+p {
+    margin-bottom: 1.25rem;
+}
+
+.lead {
+    margin-bottom: 1.5rem;
+}
+
+
+/* Smooth transitions */
+
+* {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}

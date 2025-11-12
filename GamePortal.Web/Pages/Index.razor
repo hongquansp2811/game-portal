@@ -1,9 +1,15 @@
 ﻿@page "/"
 @using GamePortal.Core.DTOs
 @using GamePortal.Core.Services
+@using GamePortal.Core.Entities
 @inject IGameService GameService
 
 <div class="container-fluid">
+	<!-- Top Banners -->
+	<div class="container mb-4">
+		<BannerDisplay Position="@BannerPosition.Top" CssClass="top-banner" />
+	</div>
+
 	<div class="jumbotron bg-primary text-white py-5 mb-4">
 		<div class="container">
 			<h1 class="display-4">🎮 Welcome to GamePortal!</h1>
@@ -12,10 +18,12 @@
 	</div>
 
 	<div class="container">
-		<div class="row mb-4">
+		<div class="row mb-5">
 			<div class="col-12">
-				<h2 class="border-bottom pb-2">🔥 Hot Games</h2>
-				<p class="text-muted">Most played games right now</p>
+				<h2 class="hot-games-header">
+					<i class="bi bi-fire"></i> Hot Games
+				</h2>
+				<p class="text-muted mt-2">Most played games right now</p>
 			</div>
 		</div>
 
@@ -54,10 +62,12 @@
 			</div>
 		}
 
-		<div class="row mt-5 mb-4">
+		<div class="row mt-5 mb-5">
 			<div class="col-12">
-				<h2 class="border-bottom pb-2">⭐ Featured Games</h2>
-				<p class="text-muted">Top rated games</p>
+				<h2 class="border-bottom">
+					<i class="bi bi-star-fill"></i> Featured Games
+				</h2>
+				<p class="text-muted mt-2">Top rated games</p>
 			</div>
 		</div>
 

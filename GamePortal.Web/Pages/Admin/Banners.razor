@@ -1,25 +1,51 @@
 @page "/admin/banners"
 @attribute [Authorize(Policy = "RequireAdmin")]
 @using GamePortal.Core.Entities
-@using GamePortal.Core.Interfaces
-@inject IBannerRepository BannerRepository
+@using GamePortal.Core.Services
+@inject IBannerService BannerService
 
-<div class="container py-4">
-	<h2>Banners Management</h2>
+<div class="container py-4 fade-in">
+	<div class="admin-page-header">
+		<h2><i class="bi bi-image"></i> Banners Management</h2>
+		<div class="text-muted">Manage site banners and advertisements</div>
+	</div>
 
 	<!-- Create Banner Form -->
-	<div class="card mb-4">
-		<div class="card-body">
-			<h5 class="card-title">@(editBannerId.HasValue ? "Edit Banner" : "Create New Banner")</h5>
+	<div class="admin-card mb-4">
+		<div class="admin-card-header">
+			<i class="bi bi-@(editBannerId.HasValue ? "pencil-square" : "plus-circle")"></i>
+			@(editBannerId.HasValue ? "Edit Banner" : "Create New Banner")
+		</div>
+		<div class="admin-card-body">
+			@if (!string.IsNullOrEmpty(errorMessage))
+			{
+				<div class="alert alert-danger" role="alert">
+					<i class="bi bi-exclamation-triangle-fill"></i>
+					@errorMessage
+				</div>
+			}
+			
+			@if (!string.IsNullOrEmpty(successMessage))
+			{
+				<div class="alert alert-success" role="alert">
+					<i class="bi bi-check-circle-fill"></i>
+					@successMessage
+				</div>
+			}
+			
 			<EditForm Model="currentBanner" OnValidSubmit="@(editBannerId.HasValue ? SaveBannerAsync : CreateBannerAsync)">
 				<DataAnnotationsValidator />
-				<div class="row g-3">
+				<div class="row g-4">
 					<div class="col-md-6">
-						<label class="form-label">Title *</label>
+						<label class="form-label required">
+							<i class="bi bi-type"></i> Title
+						</label>
 						<InputText @bind-Value="currentBanner.Title" class="form-control" placeholder="Banner Title" />
 					</div>
 					<div class="col-md-6">
-						<label class="form-label">Position *</label>
+						<label class="form-label required">
+							<i class="bi bi-geo-alt"></i> Position
+						</label>
 						<InputSelect @bind-Value="currentBanner.Position" class="form-select">
 							<option value="@BannerPosition.Top">Top</option>
 							<option value="@BannerPosition.Sidebar">Sidebar</option>
@@ -28,33 +54,72 @@
 						</InputSelect>
 					</div>
 					<div class="col-12">
-						<label class="form-label">Image URL *</label>
-						<InputText @bind-Value="currentBanner.ImageUrl" class="form-control" placeholder="https://..." />
+						<label class="form-label required">
+							<i class="bi bi-image"></i> Image URL
+						</label>
+						<InputText @bind-Value="currentBanner.ImageUrl" class="form-control" placeholder="https://..." @oninput="OnImageUrlChange" />
+						@if (!string.IsNullOrEmpty(currentBanner.ImageUrl))
+						{
+							<div class="image-preview-container has-image mt-2">
+								<img src="@currentBanner.ImageUrl" alt="Banner preview" class="image-preview" 
+									 onerror="this.parentElement.classList.remove('has-image'); this.style.display='none';" />
+							</div>
+						}
+						else
+						{
+							<div class="image-preview-container mt-2">
+								<div class="image-preview-placeholder">
+									<i class="bi bi-image"></i>
+									<div>Banner preview will appear here</div>
+								</div>
+							</div>
+						}
 					</div>
 					<div class="col-12">
-						<label class="form-label">Link URL</label>
+						<label class="form-label">
+							<i class="bi bi-link-45deg"></i> Link URL
+						</label>
 						<InputText @bind-Value="currentBanner.LinkUrl" class="form-control" placeholder="https://..." />
-						<small class="form-text text-muted">URL để redirect khi click vào banner (optional)</small>
+						<small class="form-text">URL để redirect khi click vào banner (optional)</small>
 					</div>
 					<div class="col-12">
-						<label class="form-label">Description</label>
-						<InputTextArea @bind-Value="currentBanner.Description" class="form-control" rows="2" />
+						<label class="form-label">
+							<i class="bi bi-card-text"></i> Description
+						</label>
+						<InputTextArea @bind-Value="currentBanner.Description" class="form-control" rows="2" placeholder="Banner description..." />
 					</div>
 					<div class="col-md-3">
-						<label class="form-label">Display Order</label>
+						<label class="form-label">
+							<i class="bi bi-sort-numeric-down"></i> Display Order
+						</label>
 						<InputNumber @bind-Value="currentBanner.DisplayOrder" class="form-control" min="0" />
 					</div>
 					<div class="col-md-3 d-flex align-items-end">
 						<div class="form-check">
 							<InputCheckbox @bind-Value="currentBanner.IsActive" class="form-check-input" />
-							<label class="form-check-label">Is Active</label>
+							<label class="form-check-label">
+								<i class="bi bi-toggle-on"></i> Is Active
+							</label>
 						</div>
 					</div>
 					<div class="col-12">
-						<button class="btn btn-primary" type="submit">@(editBannerId.HasValue ? "Update Banner" : "Create Banner")</button>
+						<div class="section-divider"></div>
+						<button class="btn btn-primary" type="submit" disabled="@isProcessing">
+							@if (isProcessing)
+							{
+								<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+							}
+							else
+							{
+								<i class="bi bi-@(editBannerId.HasValue ? "check-lg" : "plus-circle")"></i>
+							}
+							@(editBannerId.HasValue ? "Update Banner" : "Create Banner")
+						</button>
 						@if (editBannerId.HasValue)
 						{
-							<button class="btn btn-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+							<button class="btn btn-secondary ms-2" type="button" @onclick="CancelEdit" disabled="@isProcessing">
+								<i class="bi bi-x-lg"></i> Cancel
+							</button>
 						}
 					</div>
 				</div>
@@ -66,77 +131,93 @@
 	@if (banners == null)
 	{
 		<div class="text-center py-5">
-			<div class="spinner-border" role="status">
+			<div class="spinner-border text-primary" role="status">
 				<span class="visually-hidden">Loading...</span>
 			</div>
 		</div>
 	}
 	else if (!banners.Any())
 	{
-		<div class="alert alert-info">No banners found. Create your first banner above.</div>
+		<div class="admin-card">
+			<div class="admin-card-body text-center py-5">
+				<i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+				<h5 class="mt-3">No banners found</h5>
+				<p class="text-muted">Create your first banner above!</p>
+			</div>
+		</div>
 	}
 	else
 	{
-		<div class="card">
-			<div class="card-body">
-				<h5 class="card-title">All Banners</h5>
-				<div class="table-responsive">
-					<table class="table table-striped">
-						<thead>
+		<div class="admin-card">
+			<div class="admin-card-header">
+				<i class="bi bi-list-ul"></i> All Banners
+				<span class="badge bg-light text-dark ms-2">@banners.Count()</span>
+			</div>
+			<div class="table-wrapper">
+				<table class="table mb-0">
+					<thead>
+						<tr>
+							<th style="width: 120px;">Preview</th>
+							<th>Title</th>
+							<th>Position</th>
+							<th>Order</th>
+							<th>Status</th>
+							<th style="width: 200px;">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var banner in banners.OrderBy(b => b.DisplayOrder))
+						{
 							<tr>
-								<th>Preview</th>
-								<th>Title</th>
-								<th>Position</th>
-								<th>Order</th>
-								<th>Status</th>
-								<th style="width:200px">Actions</th>
+								<td>
+									@if (!string.IsNullOrEmpty(banner.ImageUrl))
+									{
+										<img src="@banner.ImageUrl" alt="@banner.Title" 
+											 class="img-thumbnail rounded" style="max-width: 100px; max-height: 60px; object-fit: cover;" />
+									}
+									else
+									{
+										<div class="text-muted text-center">
+											<i class="bi bi-image" style="font-size: 2rem;"></i>
+										</div>
+									}
+								</td>
+								<td>
+									<strong>@banner.Title</strong>
+									@if (!string.IsNullOrEmpty(banner.Description))
+									{
+										<br />
+										<small class="text-muted">@banner.Description</small>
+									}
+								</td>
+								<td>
+									<span class="badge bg-info">@banner.Position</span>
+								</td>
+								<td>
+									<strong>@banner.DisplayOrder</strong>
+								</td>
+								<td>
+									@if (banner.IsActive)
+									{
+										<span class="badge bg-success">Active</span>
+									}
+									else
+									{
+										<span class="badge bg-secondary">Inactive</span>
+									}
+								</td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary me-2" @onclick="() => BeginEdit(banner)">
+										<i class="bi bi-pencil"></i> Edit
+									</button>
+									<button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteBannerAsync(banner.Id)">
+										<i class="bi bi-trash"></i> Delete
+									</button>
+								</td>
 							</tr>
-						</thead>
-						<tbody>
-							@foreach (var banner in banners.OrderBy(b => b.DisplayOrder))
-							{
-								<tr>
-									<td>
-										@if (!string.IsNullOrEmpty(banner.ImageUrl))
-										{
-											<img src="@banner.ImageUrl" alt="@banner.Title" style="max-width: 100px; max-height: 50px; object-fit: cover;" class="img-thumbnail" />
-										}
-										else
-										{
-											<span class="text-muted">No image</span>
-										}
-									</td>
-									<td>
-										<strong>@banner.Title</strong>
-										@if (!string.IsNullOrEmpty(banner.Description))
-										{
-											<br />
-											<small class="text-muted">@banner.Description</small>
-										}
-									</td>
-									<td>
-										<span class="badge bg-info">@banner.Position</span>
-									</td>
-									<td>@banner.DisplayOrder</td>
-									<td>
-										@if (banner.IsActive)
-										{
-											<span class="badge bg-success">Active</span>
-										}
-										else
-										{
-											<span class="badge bg-secondary">Inactive</span>
-										}
-									</td>
-									<td>
-										<button class="btn btn-sm btn-outline-primary me-2" @onclick="() => BeginEdit(banner)">Edit</button>
-										<button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteBannerAsync(banner.Id)">Delete</button>
-									</td>
-								</tr>
-							}
-						</tbody>
-					</table>
-				</div>
+						}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	}
@@ -146,6 +227,9 @@
 	private List<Banner>? banners;
 	private Banner currentBanner = new() { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
 	private int? editBannerId;
+	private bool isProcessing = false;
+	private string? errorMessage;
+	private string? successMessage;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -154,9 +238,22 @@
 
 	private async Task ReloadAsync()
 	{
-		var list = await BannerRepository.GetAllAsync();
-		banners = list.OrderBy(b => b.DisplayOrder).ToList();
-		StateHasChanged();
+		if (isProcessing) return;
+		try
+		{
+			isProcessing = true;
+			var list = await BannerService.GetAllAsync();
+			banners = list.ToList();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error loading banners: {ex.Message}";
+		}
+		finally
+		{
+			isProcessing = false;
+			await InvokeAsync(StateHasChanged);
+		}
 	}
 
 	private void BeginEdit(Banner banner)
@@ -173,41 +270,102 @@
 			DisplayOrder = banner.DisplayOrder,
 			IsActive = banner.IsActive
 		};
-		StateHasChanged();
+		errorMessage = null;
+		successMessage = null;
 	}
 
 	private void CancelEdit()
 	{
 		editBannerId = null;
 		currentBanner = new Banner { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
-		StateHasChanged();
+		errorMessage = null;
+		successMessage = null;
 	}
 
 	private async Task CreateBannerAsync()
 	{
-		currentBanner.CreatedAt = DateTime.UtcNow;
-		await BannerRepository.AddAsync(currentBanner);
-		currentBanner = new Banner { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
-		await ReloadAsync();
+		if (isProcessing) return;
+		errorMessage = null;
+		successMessage = null;
+		try
+		{
+			isProcessing = true;
+			currentBanner.CreatedAt = DateTime.UtcNow;
+			await BannerService.CreateAsync(currentBanner);
+			successMessage = "Banner created successfully!";
+			currentBanner = new Banner { IsActive = true, DisplayOrder = 1, Position = BannerPosition.Top };
+			await ReloadAsync();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error creating banner: {ex.Message}";
+		}
+		finally
+		{
+			isProcessing = false;
+			await InvokeAsync(StateHasChanged);
+		}
 	}
 
 	private async Task SaveBannerAsync()
 	{
-		if (editBannerId.HasValue)
+		if (!editBannerId.HasValue || isProcessing)
 		{
+			return;
+		}
+
+		errorMessage = null;
+		successMessage = null;
+		try
+		{
+			isProcessing = true;
 			currentBanner.UpdatedAt = DateTime.UtcNow;
-			BannerRepository.Update(currentBanner);
+			await BannerService.UpdateAsync(currentBanner);
+			successMessage = "Banner updated successfully!";
 			CancelEdit();
 			await ReloadAsync();
+		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error updating banner: {ex.Message}";
+		}
+		finally
+		{
+			isProcessing = false;
+			await InvokeAsync(StateHasChanged);
 		}
 	}
 
 	private async Task DeleteBannerAsync(int id)
 	{
-		if (await BannerRepository.GetByIdAsync(id) != null)
+		if (isProcessing)
 		{
-			await BannerRepository.DeleteAsync(id);
+			return;
+		}
+
+		errorMessage = null;
+		successMessage = null;
+		try
+		{
+			isProcessing = true;
+			await BannerService.DeleteAsync(id);
+			successMessage = "Banner deleted successfully!";
 			await ReloadAsync();
 		}
+		catch (Exception ex)
+		{
+			errorMessage = $"Error deleting banner: {ex.Message}";
+		}
+		finally
+		{
+			isProcessing = false;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	private void OnImageUrlChange(ChangeEventArgs e)
+	{
+		currentBanner.ImageUrl = e.Value?.ToString() ?? string.Empty;
+		StateHasChanged();
 	}
 }

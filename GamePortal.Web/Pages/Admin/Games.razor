@@ -7,26 +7,58 @@
 @inject IGameService GameService
 @inject ICategoryRepository CategoryRepository
 
-<div class="container py-4">
-	<h2>Games Management</h2>
+<div class="container py-4 fade-in">
+	<div class="admin-page-header">
+		<h2><i class="bi bi-controller"></i> Games Management</h2>
+		<div class="text-muted">Manage your game collection</div>
+	</div>
 
 	<!-- Create/Edit Form -->
-	<div class="card mb-4">
-		<div class="card-body">
-			<h5 class="card-title">@(editGameId.HasValue ? "Edit Game" : "Create New Game")</h5>
+	<div class="admin-card mb-4">
+		<div class="admin-card-header">
+			<i class="bi bi-@(editGameId.HasValue ? "pencil-square" : "plus-circle")"></i>
+			@(editGameId.HasValue ? "Edit Game" : "Create New Game")
+		</div>
+		<div class="admin-card-body">
+			@if (!string.IsNullOrEmpty(errorMessage))
+			{
+				<div class="alert alert-danger" role="alert">
+					<i class="bi bi-exclamation-triangle-fill"></i>
+					@errorMessage
+				</div>
+			}
+			
+			@if (!string.IsNullOrEmpty(successMessage))
+			{
+				<div class="alert alert-success" role="alert">
+					<i class="bi bi-check-circle-fill"></i>
+					@successMessage
+				</div>
+			}
+			
 			<EditForm Model="currentGame" OnValidSubmit="@(editGameId.HasValue ? SaveGameAsync : CreateGameAsync)">
 				<DataAnnotationsValidator />
-				<div class="row g-3">
+				<ValidationSummary class="alert alert-danger" />
+				<div class="row g-4">
 					<div class="col-md-6">
-						<label class="form-label">Title *</label>
-						<InputText @bind-Value="currentGame.Title" class="form-control" placeholder="Game Title" />
+						<label class="form-label required">
+							<i class="bi bi-type"></i> Title
+						</label>
+						<InputText @bind-Value="currentGame.Title" class="form-control" placeholder="Enter game title" />
+						<ValidationMessage For="@(() => currentGame.Title)" />
 					</div>
 					<div class="col-md-6">
-						<label class="form-label">Slug *</label>
+						<label class="form-label required">
+							<i class="bi bi-link-45deg"></i> Slug
+						</label>
 						<InputText @bind-Value="currentGame.Slug" class="form-control" placeholder="game-slug" />
+						<ValidationMessage For="@(() => currentGame.Slug)" />
+						<small class="form-text">URL-friendly identifier (lowercase, hyphens only)</small>
 					</div>
 					<div class="col-md-6">
-						<label class="form-label">Category *</label>
+						<label class="form-label required">
+							<i class="bi bi-folder"></i> Category
+						</label>
 						<InputSelect @bind-Value="currentGame.CategoryId" class="form-select">
 							<option value="0">-- Select Category --</option>
 							@foreach (var cat in categories ?? new List<Category>())
@@ -34,13 +66,18 @@
 								<option value="@cat.Id">@cat.Name</option>
 							}
 						</InputSelect>
+						<ValidationMessage For="@(() => currentGame.CategoryId)" />
 					</div>
 					<div class="col-md-3">
-						<label class="form-label">Rating (1-5)</label>
+						<label class="form-label">
+							<i class="bi bi-star"></i> Rating (1-5)
+						</label>
 						<InputNumber @bind-Value="currentGame.Rating" class="form-control" min="1" max="5" />
 					</div>
 					<div class="col-md-3">
-						<label class="form-label">Game Type</label>
+						<label class="form-label">
+							<i class="bi bi-tag"></i> Game Type
+						</label>
 						<InputSelect @bind-Value="currentGame.GameType" class="form-select">
 							<option value="Online">Online</option>
 							<option value="Review">Review</option>
@@ -48,43 +85,88 @@
 						</InputSelect>
 					</div>
 					<div class="col-12">
-						<label class="form-label">Thumbnail URL *</label>
-						<InputText @bind-Value="currentGame.ThumbnailUrl" class="form-control" placeholder="https://..." />
+						<label class="form-label required">
+							<i class="bi bi-image"></i> Thumbnail URL
+						</label>
+						<InputText @bind-Value="currentGame.ThumbnailUrl" class="form-control" placeholder="https://..." @oninput="OnThumbnailUrlChange" />
+						<ValidationMessage For="@(() => currentGame.ThumbnailUrl)" />
+						@if (!string.IsNullOrEmpty(currentGame.ThumbnailUrl))
+						{
+							<div class="image-preview-container has-image mt-2">
+								<img src="@currentGame.ThumbnailUrl" alt="Thumbnail preview" class="image-preview" 
+									 onerror="this.parentElement.classList.remove('has-image'); this.style.display='none';" />
+							</div>
+						}
+						else
+						{
+							<div class="image-preview-container mt-2">
+								<div class="image-preview-placeholder">
+									<i class="bi bi-image"></i>
+									<div>Thumbnail preview will appear here</div>
+								</div>
+							</div>
+						}
 					</div>
 					<div class="col-12">
-						<label class="form-label">Game URL (for iframe) *</label>
-						<InputText @bind-Value="currentGame.GameUrl" class="form-control" placeholder="https://... or relative path to game HTML" />
-						<small class="form-text text-muted">URL của game HTML để embed trong iframe</small>
+						<label class="form-label required">
+							<i class="bi bi-play-circle"></i> Game URL (for iframe)
+						</label>
+						<InputText @bind-Value="currentGame.GameUrl" class="form-control" placeholder="https://... or /games/game-name/index.html" />
+						<small class="form-text">URL của game HTML để embed trong iframe</small>
+						<ValidationMessage For="@(() => currentGame.GameUrl)" />
 					</div>
 					<div class="col-md-6">
-						<label class="form-label">Platform</label>
+						<label class="form-label">
+							<i class="bi bi-device-hdd"></i> Platform
+						</label>
 						<InputText @bind-Value="currentGame.Platform" class="form-control" placeholder="Desktop, Mobile, Tablet" />
 					</div>
 					<div class="col-md-6">
-						<label class="form-label">Description</label>
-						<InputTextArea @bind-Value="currentGame.Description" class="form-control" rows="2" />
+						<label class="form-label">
+							<i class="bi bi-card-text"></i> Description
+						</label>
+						<InputTextArea @bind-Value="currentGame.Description" class="form-control" rows="2" placeholder="Short description..." />
 					</div>
 					<div class="col-12">
-						<label class="form-label">Full Description</label>
-						<InputTextArea @bind-Value="currentGame.FullDescription" class="form-control" rows="4" />
+						<label class="form-label">
+							<i class="bi bi-file-text"></i> Full Description
+						</label>
+						<InputTextArea @bind-Value="currentGame.FullDescription" class="form-control" rows="4" placeholder="Detailed description about the game..." />
 					</div>
 					<div class="col-md-6">
 						<div class="form-check">
 							<InputCheckbox @bind-Value="currentGame.IsHot" class="form-check-input" />
-							<label class="form-check-label">Is Hot Game</label>
+							<label class="form-check-label">
+								<i class="bi bi-fire"></i> Is Hot Game
+							</label>
 						</div>
 					</div>
 					<div class="col-md-6">
 						<div class="form-check">
 							<InputCheckbox @bind-Value="currentGame.IsFeatured" class="form-check-input" />
-							<label class="form-check-label">Is Featured</label>
+							<label class="form-check-label">
+								<i class="bi bi-star-fill"></i> Is Featured
+							</label>
 						</div>
 					</div>
 					<div class="col-12">
-						<button class="btn btn-primary" type="submit">@(editGameId.HasValue ? "Update Game" : "Create Game")</button>
+						<div class="section-divider"></div>
+						<button class="btn btn-primary" type="submit" disabled="@isProcessing">
+							@if (isProcessing)
+							{
+								<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+							}
+							else
+							{
+								<i class="bi bi-@(editGameId.HasValue ? "check-lg" : "plus-circle")"></i>
+							}
+							@(editGameId.HasValue ? "Update Game" : "Create Game")
+						</button>
 						@if (editGameId.HasValue)
 						{
-							<button class="btn btn-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+							<button class="btn btn-secondary ms-2" type="button" @onclick="CancelEdit" disabled="@isProcessing">
+								<i class="bi bi-x-lg"></i> Cancel
+							</button>
 						}
 					</div>
 				</div>
@@ -95,82 +177,99 @@
 	<!-- Games List -->
 	@if (games == null)
 	{
-		<p>Loading...</p>
+		<div class="text-center py-5">
+			<div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
 	}
 	else if (!games.Any())
 	{
-		<div class="alert alert-info">No games found. Create your first game above!</div>
+		<div class="admin-card">
+			<div class="admin-card-body text-center py-5">
+				<i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+				<h5 class="mt-3">No games found</h5>
+				<p class="text-muted">Create your first game above!</p>
+			</div>
+		</div>
 	}
 	else
 	{
-		<div class="card">
-			<div class="card-header d-flex justify-content-between align-items-center">
-				<h5 class="mb-0">All Games (@games.Count())</h5>
-				<input type="text" class="form-control form-control-sm" style="width: 200px;" 
-					   placeholder="Search..." value="@searchTerm" @oninput="OnSearchInput" />
-			</div>
-			<div class="card-body p-0">
-				<div class="table-responsive">
-					<table class="table table-hover mb-0">
-						<thead class="table-light">
-							<tr>
-								<th style="width: 80px;">Thumb</th>
-								<th>Title</th>
-								<th>Category</th>
-								<th>Type</th>
-								<th>Rating</th>
-								<th>Plays</th>
-								<th>Status</th>
-								<th style="width: 200px;">Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							@foreach (var game in games)
-							{
-								<tr>
-									<td>
-										<img src="@game.ThumbnailUrl" alt="@game.Title" 
-											 class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;" />
-									</td>
-									<td>
-										<strong>@game.Title</strong><br />
-										<small class="text-muted">@game.Slug</small>
-									</td>
-									<td>@game.CategoryName</td>
-									<td>@game.GameType</td>
-									<td>
-										@for (int i = 0; i < game.Rating; i++)
-										{
-											<span class="text-warning">★</span>
-										}
-									</td>
-									<td>@game.PlayCount</td>
-									<td>
-										@if (game.IsHot)
-										{
-											<span class="badge bg-danger">Hot</span>
-										}
-										@if (game.IsFeatured)
-										{
-											<span class="badge bg-warning">Featured</span>
-										}
-									</td>
-									<td>
-										<a href="/games/@game.Slug" target="_blank" class="btn btn-sm btn-outline-info me-1" title="View">
-											👁️
-										</a>
-										<button class="btn btn-sm btn-outline-primary me-1" @onclick="() => BeginEdit(game.Id)" title="Edit">
-											✏️
-										</button>
-										<button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteGameAsync(game.Id)" title="Delete">
-											🗑️
-										</button>
-									</td>
-								</tr>
-							}
-						</tbody>
-					</table>
+		<div class="admin-card">
+			<div class="admin-card-header d-flex justify-content-between align-items-center">
+				<div>
+					<i class="bi bi-list-ul"></i> All Games
+					<span class="badge bg-light text-dark ms-2">@games.Count()</span>
 				</div>
+				<div class="search-box" style="width: 250px;">
+					<input type="text" class="form-control form-control-sm" 
+						   placeholder="Search games..." value="@searchTerm" @oninput="OnSearchInput" />
+				</div>
+			</div>
+			<div class="table-wrapper">
+				<table class="table mb-0">
+					<thead>
+						<tr>
+							<th style="width: 80px;">Thumb</th>
+							<th>Title</th>
+							<th>Category</th>
+							<th>Type</th>
+							<th>Rating</th>
+							<th>Plays</th>
+							<th>Status</th>
+							<th style="width: 200px;">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var game in games)
+						{
+							<tr>
+								<td>
+									<img src="@game.ThumbnailUrl" alt="@game.Title" 
+										 class="img-thumbnail rounded" style="width: 60px; height: 60px; object-fit: cover;" />
+								</td>
+								<td>
+									<strong>@game.Title</strong><br />
+									<small class="text-muted">@game.Slug</small>
+								</td>
+								<td>
+									<span class="badge bg-info">@game.CategoryName</span>
+								</td>
+								<td>@game.GameType</td>
+								<td>
+									@for (int i = 0; i < game.Rating; i++)
+									{
+										<span class="text-warning">★</span>
+									}
+								</td>
+								<td>
+									<strong>@game.PlayCount</strong>
+								</td>
+								<td>
+									@if (game.IsHot)
+									{
+										<span class="badge bg-danger me-1">🔥 Hot</span>
+									}
+									@if (game.IsFeatured)
+									{
+										<span class="badge bg-warning">⭐ Featured</span>
+									}
+								</td>
+								<td>
+									<a href="/games/@game.Slug" target="_blank" class="btn btn-sm btn-outline-info me-1" title="View">
+										<i class="bi bi-eye"></i>
+									</a>
+									<button class="btn btn-sm btn-outline-primary me-1" @onclick="() => BeginEdit(game.Id)" title="Edit">
+										<i class="bi bi-pencil"></i>
+									</button>
+									<button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteGameAsync(game.Id)" title="Delete">
+										<i class="bi bi-trash"></i>
+									</button>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	}
@@ -182,6 +281,9 @@
 	private CreateGameDTO currentGame = new();
 	private int? editGameId = null;
 	private string searchTerm = string.Empty;
+	private string? errorMessage;
+	private string? successMessage;
+	private bool isProcessing = false;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -197,16 +299,65 @@
 
 	private async Task CreateGameAsync()
 	{
+		if (isProcessing) return;
+		
+		errorMessage = null;
+		successMessage = null;
+		
 		try
 		{
-			if (currentGame.CategoryId == 0) return;
+			// Validation
+			if (string.IsNullOrWhiteSpace(currentGame.Title))
+			{
+				errorMessage = "Title is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (string.IsNullOrWhiteSpace(currentGame.Slug))
+			{
+				errorMessage = "Slug is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (currentGame.CategoryId == 0)
+			{
+				errorMessage = "Please select a category.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (string.IsNullOrWhiteSpace(currentGame.ThumbnailUrl))
+			{
+				errorMessage = "Thumbnail URL is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (string.IsNullOrWhiteSpace(currentGame.GameUrl))
+			{
+				errorMessage = "Game URL is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			isProcessing = true;
 			await GameService.CreateGameAsync(currentGame);
+			successMessage = "Game created successfully!";
 			currentGame = new CreateGameDTO();
 			await LoadDataAsync();
 		}
 		catch (Exception ex)
 		{
+			errorMessage = $"Error creating game: {ex.Message}";
 			Console.WriteLine($"Error creating game: {ex.Message}");
+			Console.WriteLine($"Stack trace: {ex.StackTrace}");
+		}
+		finally
+		{
+			isProcessing = false;
+			StateHasChanged();
 		}
 	}
 
@@ -242,13 +393,64 @@
 	{
 		editGameId = null;
 		currentGame = new CreateGameDTO();
+		errorMessage = null;
+		successMessage = null;
+		StateHasChanged();
 	}
 
 	private async Task SaveGameAsync()
 	{
+		if (isProcessing) return;
+		
+		errorMessage = null;
+		successMessage = null;
+		
 		try
 		{
-			if (!editGameId.HasValue || currentGame.CategoryId == 0) return;
+			if (!editGameId.HasValue)
+			{
+				errorMessage = "Invalid game ID.";
+				StateHasChanged();
+				return;
+			}
+			
+			// Validation
+			if (string.IsNullOrWhiteSpace(currentGame.Title))
+			{
+				errorMessage = "Title is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (string.IsNullOrWhiteSpace(currentGame.Slug))
+			{
+				errorMessage = "Slug is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (currentGame.CategoryId == 0)
+			{
+				errorMessage = "Please select a category.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (string.IsNullOrWhiteSpace(currentGame.ThumbnailUrl))
+			{
+				errorMessage = "Thumbnail URL is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			if (string.IsNullOrWhiteSpace(currentGame.GameUrl))
+			{
+				errorMessage = "Game URL is required.";
+				StateHasChanged();
+				return;
+			}
+			
+			isProcessing = true;
 			var updateDto = new UpdateGameDTO
 			{
 				Title = currentGame.Title,
@@ -265,12 +467,20 @@
 				CategoryId = currentGame.CategoryId
 			};
 			await GameService.UpdateGameAsync(editGameId.Value, updateDto);
+			successMessage = "Game updated successfully!";
 			CancelEdit();
 			await LoadDataAsync();
 		}
 		catch (Exception ex)
 		{
+			errorMessage = $"Error updating game: {ex.Message}";
 			Console.WriteLine($"Error updating game: {ex.Message}");
+			Console.WriteLine($"Stack trace: {ex.StackTrace}");
+		}
+		finally
+		{
+			isProcessing = false;
+			StateHasChanged();
 		}
 	}
 
@@ -299,5 +509,11 @@
 			games = (await GameService.SearchGamesAsync(searchTerm)).ToList();
 			StateHasChanged();
 		}
+	}
+
+	private void OnThumbnailUrlChange(ChangeEventArgs e)
+	{
+		currentGame.ThumbnailUrl = e.Value?.ToString() ?? string.Empty;
+		StateHasChanged();
 	}
 }
