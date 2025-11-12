@@ -127,7 +127,7 @@ namespace GamePortal.Web
                 endpoints.MapFallbackToPage("/_Host");
             });
 
-            // Seed database on startup (non-blocking, run in background)
+            // Run migrations and seed database on startup (non-blocking, run in background)
             _ = Task.Run(async () =>
             {
                 try
@@ -138,6 +138,19 @@ namespace GamePortal.Web
                         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                        
+                        // Run migrations automatically
+                        try
+                        {
+                            await context.Database.MigrateAsync();
+                            Console.WriteLine("Database migrations applied successfully.");
+                        }
+                        catch (Exception migEx)
+                        {
+                            Console.WriteLine($"Migration error (may be normal if already applied): {migEx.Message}");
+                        }
+                        
+                        // Seed database
                         await DbInitializer.Initialize(context, userManager, roleManager);
                     }
                 }
