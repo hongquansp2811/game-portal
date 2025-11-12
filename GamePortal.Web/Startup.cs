@@ -83,6 +83,9 @@ namespace GamePortal.Web
             services.AddScoped<IBannerService, BannerService>();
             services.AddScoped<ISiteSettingsService, SiteSettingsService>();
 
+            // Health Checks
+            services.AddHealthChecks();
+
             // Blazor
             services.AddRazorPages();
             services.AddServerSideBlazor();
@@ -115,20 +118,34 @@ namespace GamePortal.Web
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Seed database on startup
-            using (var scope = app.ApplicationServices.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                DbInitializer.Initialize(context, userManager, roleManager).Wait();
-            }
-
+            // Health Check endpoint (must be before other endpoints)
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHealthChecks("/health");
                 endpoints.MapRazorPages();
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
+            });
+
+            // Seed database on startup (non-blocking, run in background)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(5000); // Wait 5 seconds for app to start
+                    using (var scope = app.ApplicationServices.CreateScope())
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                        await DbInitializer.Initialize(context, userManager, roleManager);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't crash the app
+                    Console.WriteLine($"Database initialization error: {ex.Message}");
+                }
             });
         }
     }

@@ -26,5 +26,8 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 COPY --from=publish /app/publish .
 
+# Health check - Railway/Render will use healthcheckPath from config
+# HEALTHCHECK removed - platforms handle this via healthcheckPath
+
 ENTRYPOINT ["dotnet", "GamePortal.Web.dll"]
 

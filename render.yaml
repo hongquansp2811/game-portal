@@ -11,7 +11,7 @@ services:
         fromDatabase:
           name: gameportaldb
           property: connectionString
-    healthCheckPath: /
+    healthCheckPath: /health
 
 databases:
   - name: gameportaldb
