@@ -9,7 +9,8 @@ public static class DbInitializer
 {
 	public static async Task Initialize(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
 	{
-		await context.Database.MigrateAsync();
+		// Migration is handled in Startup.cs, so we don't need to run it here again
+		// await context.Database.MigrateAsync();
 
 		// Seed roles
 		if (!await roleManager.Roles.AnyAsync())
