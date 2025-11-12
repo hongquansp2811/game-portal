@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: gameportal
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: gameportaldb
+          property: connectionString
+    healthCheckPath: /
+
+databases:
+  - name: gameportaldb
+    plan: free
+    databaseName: gameportaldb
+    user: gameportal
+

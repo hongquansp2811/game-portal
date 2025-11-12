@@ -30,11 +30,30 @@ namespace GamePortal.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Database
+            // Database - Support both SQL Server (local) and PostgreSQL (production)
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly("GamePortal.Infrastructure")));
+            {
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    // Fallback to in-memory for testing
+                    options.UseInMemoryDatabase("GamePortalDb");
+                }
+                else if (connectionString.Contains("Server=") || connectionString.Contains("Data Source="))
+                {
+                    // SQL Server
+                    options.UseSqlServer(
+                        connectionString,
+                        b => b.MigrationsAssembly("GamePortal.Infrastructure"));
+                }
+                else
+                {
+                    // PostgreSQL (Railway, Render, etc.)
+                    options.UseNpgsql(
+                        connectionString,
+                        b => b.MigrationsAssembly("GamePortal.Infrastructure"));
+                }
+            });
 
             // Identity
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
